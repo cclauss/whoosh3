@@ -70,7 +70,10 @@ About section of the README.)*
       `Regex`, `FuzzyTerm`, and `Variations`, the query objects most programs
       construct directly, and the boolean combinators in
       `whoosh.query.compound` (gh#52): `And`, `Or`, `DisjunctionMax`, and
-      `AndNot`, the queries most programs build via the `&`/`|` operators.
+      `AndNot`, the queries most programs build via the `&`/`|` operators, and
+      the wrapping query classes in `whoosh.query.wrappers` (gh#53): `Not`
+      (the `-` operator), `ConstantScoreQuery`, `WeightingQuery`, and the
+      `WrappingQuery` base.
       Deeper coverage of *internal*
       modules follows incrementally,
       coordinating with community typing work rather than duplicating it (see

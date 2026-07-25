@@ -19,6 +19,17 @@ All notable changes to this project are documented here. This project follows
   Annotations only — runtime behaviour and docstrings are unchanged, and the
   `whoosh.query.compound` combinators are now exercised by the
   `tests/typing_smoke.py` mypy fixture. (#52)
+- Type hints for the public API of `whoosh.query.wrappers` — the query
+  classes that wrap another query: `WrappingQuery`, `Not`,
+  `ConstantScoreQuery`, and `WeightingQuery`. `Not` is a staple of everyday
+  boolean queries (and the `-` operator), so its annotations flow into editors
+  and `mypy`/`pyright` through the shipped `py.typed` marker: constructor
+  arguments (the wrapped `child`/`query` as a `Query`, plus `float`
+  `boost`/`score`), `children()` → `Iterator[Query]`, `apply()` → the wrapping
+  query type, and the `str`/`repr`/`eq`/`hash`/`is_leaf` dunders. Annotations
+  only — runtime behaviour and docstrings are unchanged, and `Not`/
+  `ConstantScoreQuery` are now exercised by the `tests/typing_smoke.py` mypy
+  fixture. (#53)
 
 ## [3.25.3] - 2026-07-24
 

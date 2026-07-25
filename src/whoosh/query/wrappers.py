@@ -26,32 +26,38 @@
 # policies, either expressed or implied, of Matt Chaput.
 
 
+from __future__ import annotations
+
 from array import array
+from typing import TYPE_CHECKING
 
 from whoosh import matching
 from whoosh.query import qcore
 
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterator
+
 
 class WrappingQuery(qcore.Query):
-    def __init__(self, child):
+    def __init__(self, child: qcore.Query):
         self.child = child
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.child!r})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__.__name__) ^ hash(self.child)
 
-    def _rewrap(self, child):
+    def _rewrap(self, child: qcore.Query) -> WrappingQuery:
         return self.__class__(child)
 
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return False
 
-    def children(self):
+    def children(self) -> Iterator[qcore.Query]:
         yield self.child
 
-    def apply(self, fn):
+    def apply(self, fn: Callable[[qcore.Query], qcore.Query]) -> WrappingQuery:
         return self._rewrap(fn(self.child))
 
     def requires(self):
@@ -85,7 +91,7 @@ class Not(qcore.Query):
 
     __inittypes__ = {"query": qcore.Query}
 
-    def __init__(self, query, boost=1.0):
+    def __init__(self, query: qcore.Query, boost: float = 1.0):
         """
         :param query: A :class:`Query` object. The results of this query
             are *excluded* from the parent query.
@@ -97,25 +103,25 @@ class Not(qcore.Query):
         self.query = query
         self.boost = boost
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return other and self.__class__ is other.__class__ and self.query == other.query
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({repr(self.query)})"
 
-    def __str__(self):
+    def __str__(self) -> str:
         return "NOT " + str(self.query)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__.__name__) ^ hash(self.query) ^ hash(self.boost)
 
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return False
 
-    def children(self):
+    def children(self) -> Iterator[qcore.Query]:
         yield self.query
 
-    def apply(self, fn):
+    def apply(self, fn: Callable[[qcore.Query], qcore.Query]) -> Not:
         return self.__class__(fn(self.query))
 
     def normalize(self):
@@ -151,11 +157,11 @@ class ConstantScoreQuery(WrappingQuery):
     simply acting as a filter. See also the :class:`AndMaybe` query.
     """
 
-    def __init__(self, child, score=1.0):
+    def __init__(self, child: qcore.Query, score: float = 1.0):
         WrappingQuery.__init__(self, child)
         self.score = score
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             other
             and self.__class__ is other.__class__
@@ -163,10 +169,10 @@ class ConstantScoreQuery(WrappingQuery):
             and self.score == other.score
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.child) ^ hash(self.score)
 
-    def _rewrap(self, child):
+    def _rewrap(self, child: qcore.Query) -> ConstantScoreQuery:
         return self.__class__(child, self.score)
 
     def matcher(self, searcher, context=None):
@@ -186,7 +192,7 @@ class WeightingQuery(WrappingQuery):
     to score documents that match the wrapped query.
     """
 
-    def __init__(self, child, weighting):
+    def __init__(self, child: qcore.Query, weighting):
         WrappingQuery.__init__(self, child)
         self.weighting = weighting
 

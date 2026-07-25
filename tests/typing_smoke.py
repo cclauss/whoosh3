@@ -22,8 +22,10 @@ from whoosh.qparser import QueryParser
 from whoosh.query import (
     And,
     AndNot,
+    ConstantScoreQuery,
     DisjunctionMax,
     FuzzyTerm,
+    Not,
     Or,
     Prefix,
     Term,
@@ -188,6 +190,20 @@ def run() -> list[str]:
             cm: Matcher = compound_query.matcher(searcher)
             assert isinstance(str(compound_norm), str)
             assert cm.is_active() in (True, False)
+
+        # Wrapping query classes (whoosh.query.wrappers): Not excludes a
+        # subquery and ConstantScoreQuery wraps one to give matches a flat
+        # score. Their annotated constructors accept a Query (plus a float
+        # boost/score), children() yields Query objects, and str()/matcher()
+        # keep their str/Matcher return types.
+        not_q = Not(term_q, boost=1.0)
+        const_q = ConstantScoreQuery(prefix_q, score=2.0)
+        for wrapping_query in (not_q, const_q):
+            for wrapped_child in wrapping_query.children():
+                child_label: str = str(wrapped_child)
+                assert isinstance(child_label, str)
+            wm: Matcher = wrapping_query.matcher(searcher)
+            assert wm.is_active() in (True, False)
     return titles
 
 
