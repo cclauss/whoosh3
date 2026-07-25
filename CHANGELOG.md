@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- Type hints for the public API of `whoosh.query.compound` — the boolean
+  combinator query classes `CompoundQuery`, `And`, `Or`, `DisjunctionMax`,
+  `BinaryQuery`, and `AndNot`. These are the queries most programs build
+  directly (or via the `&`/`|` operators), so annotations here flow into
+  editors and `mypy`/`pyright` through the shipped `py.typed` marker:
+  constructor arguments (`subqueries` as a `Sequence[Query]`, `boost`, and the
+  class-specific `minmatch`/`scale`/`tiebreak` kwargs), the binary-query
+  `a`/`b` operands, and the container dunders (`__len__` → `int`, `__iter__`
+  → `Iterator[Query]`, `__getitem__` → `Query`, plus `str`/`eq`/`hash`).
+  Annotations only — runtime behaviour and docstrings are unchanged, and the
+  `whoosh.query.compound` combinators are now exercised by the
+  `tests/typing_smoke.py` mypy fixture. (#52)
+
 ## [3.25.3] - 2026-07-24
 
 ### Added

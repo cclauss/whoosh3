@@ -26,9 +26,16 @@
 # policies, either expressed or implied, of Matt Chaput.
 
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from whoosh import matching
 from whoosh.query import qcore
 from whoosh.util import make_binary_tree, make_weighted_tree
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator, Sequence
 
 
 class CompoundQuery(qcore.Query):
@@ -36,27 +43,27 @@ class CompoundQuery(qcore.Query):
     of multiple sub-queries .
     """
 
-    def __init__(self, subqueries, boost=1.0):
+    def __init__(self, subqueries: Sequence[qcore.Query], boost: float = 1.0):
         for subq in subqueries:
             if not isinstance(subq, qcore.Query):
                 raise qcore.QueryError(f"{subq!r} is not a query")
         self.subqueries = subqueries
         self.boost = boost
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         r = f"{self.__class__.__name__}({self.subqueries!r}"
         if hasattr(self, "boost") and self.boost != 1:
             r += f", boost={self.boost}"
         r += ")"
         return r
 
-    def __str__(self):
+    def __str__(self) -> str:
         r = "("
         r += self.JOINT.join([str(s) for s in self.subqueries])
         r += ")"
         return r
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             other
             and self.__class__ is other.__class__
@@ -64,25 +71,25 @@ class CompoundQuery(qcore.Query):
             and self.boost == other.boost
         )
 
-    def __getitem__(self, i):
+    def __getitem__(self, i: int) -> qcore.Query:
         return self.subqueries.__getitem__(i)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.subqueries)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[qcore.Query]:
         return iter(self.subqueries)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         h = hash(self.__class__.__name__) ^ hash(self.boost)
         for q in self.subqueries:
             h ^= hash(q)
         return h
 
-    def is_leaf(self):
+    def is_leaf(self) -> bool:
         return False
 
-    def children(self):
+    def children(self) -> Iterator[qcore.Query]:
         return iter(self.subqueries)
 
     def apply(self, fn):
@@ -288,7 +295,13 @@ class Or(CompoundQuery):
     ARRAY_MATCHER = 3  # Use a matcher that pre-loads docnums and scores
     matcher_type = AUTO_MATCHER
 
-    def __init__(self, subqueries, boost=1.0, minmatch=0, scale=None):
+    def __init__(
+        self,
+        subqueries: Sequence[qcore.Query],
+        boost: float = 1.0,
+        minmatch: int = 0,
+        scale: float | None = None,
+    ):
         """
         :param subqueries: a list of :class:`Query` objects to search for.
         :param boost: a boost factor to apply to the scores of all matching
@@ -448,7 +461,12 @@ class DisjunctionMax(CompoundQuery):
     document using the maximum score from the subqueries.
     """
 
-    def __init__(self, subqueries, boost=1.0, tiebreak=0.0):
+    def __init__(
+        self,
+        subqueries: Sequence[qcore.Query],
+        boost: float = 1.0,
+        tiebreak: float = 0.0,
+    ):
         CompoundQuery.__init__(self, subqueries, boost=boost)
         self.tiebreak = tiebreak
 
@@ -497,12 +515,12 @@ class BinaryQuery(CompoundQuery):
 
     boost = 1.0
 
-    def __init__(self, a, b):
+    def __init__(self, a: qcore.Query, b: qcore.Query):
         self.a = a
         self.b = b
         self.subqueries = (a, b)
 
-    def __eq__(self, other):
+    def __eq__(self, other: object) -> bool:
         return (
             other
             and self.__class__ is other.__class__
@@ -510,7 +528,7 @@ class BinaryQuery(CompoundQuery):
             and self.b == other.b
         )
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.__class__.__name__) ^ hash(self.a) ^ hash(self.b)
 
     def needs_spans(self):

@@ -68,7 +68,10 @@ About section of the README.)*
       path most people reach for after a search — and the term-level query
       classes in `whoosh.query.terms` (gh#51): `Term`, `Prefix`, `Wildcard`,
       `Regex`, `FuzzyTerm`, and `Variations`, the query objects most programs
-      construct directly. Deeper coverage of *internal*
+      construct directly, and the boolean combinators in
+      `whoosh.query.compound` (gh#52): `And`, `Or`, `DisjunctionMax`, and
+      `AndNot`, the queries most programs build via the `&`/`|` operators.
+      Deeper coverage of *internal*
       modules follows incrementally,
       coordinating with community typing work rather than duplicating it (see
       whoosh-reloaded#114 / de-odex/whoosh-novo).

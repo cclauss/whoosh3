@@ -19,7 +19,17 @@ from typing import TYPE_CHECKING, Any
 from whoosh import highlight, index, scoring
 from whoosh.fields import DATETIME, ID, NUMERIC, TEXT, Schema
 from whoosh.qparser import QueryParser
-from whoosh.query import FuzzyTerm, Prefix, Term, Variations, Wildcard
+from whoosh.query import (
+    And,
+    AndNot,
+    DisjunctionMax,
+    FuzzyTerm,
+    Or,
+    Prefix,
+    Term,
+    Variations,
+    Wildcard,
+)
 
 if TYPE_CHECKING:
     from whoosh.matching import Matcher
@@ -158,6 +168,26 @@ def run() -> list[str]:
         for term_query in (term_q, prefix_q, wildcard_q, fuzzy_q, variations_q):
             m: Matcher = term_query.matcher(searcher)
             assert m.is_active() in (True, False)
+
+        # Compound query classes (whoosh.query.compound): the boolean
+        # combinators most programs build directly. Their annotated
+        # constructors accept a sequence of subqueries plus documented kwargs,
+        # __len__ returns int, iterating yields Query objects, and
+        # normalize()/matcher() keep their Query/Matcher return types.
+        and_q = And([term_q, prefix_q], boost=1.5)
+        or_q = Or([term_q, wildcard_q], boost=2.0, minmatch=0, scale=0.5)
+        dismax_q = DisjunctionMax([term_q, fuzzy_q], tiebreak=0.1)
+        andnot_q = AndNot(or_q, term_q)
+        clause_count: int = len(and_q)
+        assert clause_count == 2
+        for sub in or_q:
+            sub_label: str = str(sub)
+            assert isinstance(sub_label, str)
+        for compound_query in (and_q, or_q, dismax_q, andnot_q):
+            compound_norm: Query = compound_query.normalize()
+            cm: Matcher = compound_query.matcher(searcher)
+            assert isinstance(str(compound_norm), str)
+            assert cm.is_active() in (True, False)
     return titles
 
 
