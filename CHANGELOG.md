@@ -6,6 +6,15 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.26.0] - 2026-07-26
+
+This release completes the type annotations for the whole `whoosh.query`
+package. Combined with the already-typed term and field-type APIs and the
+shipped `py.typed` marker, the query classes programs build directly — boolean
+combinators, wrappers, ranges, and phrase/positional queries — now surface
+their signatures in editors and `mypy`/`pyright`. These are annotation-only
+changes: runtime behaviour and docstrings are unchanged.
+
 ### Added
 - Type hints for the public API of `whoosh.query.compound` — the boolean
   combinator query classes `CompoundQuery`, `And`, `Or`, `DisjunctionMax`,
