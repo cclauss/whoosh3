@@ -7,6 +7,16 @@ All notable changes to this project are documented here. This project follows
 ## [Unreleased]
 
 ### Added
+- Type hints for the public API of `whoosh.classify` — the query-expansion
+  models `ExpansionModel`, `Bo1Model`, `Bo2Model`, `KLModel`, and the `Expander`
+  class used for automatic query expansion / relevance feedback. Constructor and
+  method signatures (weights and lengths as `float`, `doc_count` as `int`,
+  `expanded_terms` → `list[tuple[str, float]]`) now surface in editors and
+  `mypy`/`pyright` via the shipped `py.typed` marker, and the flow is exercised
+  in `tests/typing_smoke.py`. Annotations only — no runtime behaviour changes.
+  Thanks to **@AshSgDe29071999** for the first external contribution to the
+  revived project ([#60](https://github.com/priya-sundaram-dev/whoosh/pull/60),
+  closes [#59](https://github.com/priya-sundaram-dev/whoosh/issues/59)).
 - New example `examples/rag_retriever.py`: using Whoosh as a BM25 retriever for
   RAG, with a runnable **hybrid search** pattern (Whoosh BM25 + any vector store,
   fused via Reciprocal Rank Fusion). It demonstrates the complementary failure
