@@ -89,6 +89,35 @@ argument to the field object::
     schema = Schema(content=TEXT(analyzer=StemmingAnalyzer()))
 
 
+CJK (Chinese / Japanese / Korean) text
+======================================
+
+CJK scripts generally don't put spaces between words, so the default word
+tokenizer indexes an entire CJK sentence as a *single* token -- meaning a search
+for a word inside it never matches. Whoosh ships a ``CJKAnalyzer`` (and a
+composable ``CJKFilter``) that indexes each CJK character as its own token
+(unigram indexing), so both single-character terms and quoted phrases match,
+while Latin/other text is tokenized normally::
+
+    from whoosh.analysis import CJKAnalyzer
+
+    schema = Schema(content=TEXT(analyzer=CJKAnalyzer()))
+
+    >>> [t.text for t in CJKAnalyzer()(u"searching 東京")]
+    ['searching', '東', '京']
+
+If you already have an analyzer you like (say a stemming analyzer for English),
+you can add CJK support by appending ``CJKFilter`` -- it only touches CJK
+characters and leaves everything else unchanged::
+
+    from whoosh.analysis import StemmingAnalyzer, CJKFilter
+
+    analyzer = StemmingAnalyzer() | CJKFilter()
+
+    >>> [t.text for t in analyzer(u"studying 日本語")]
+    ['studi', '日', '本', '語']
+
+
 Advanced Analysis
 =================
 

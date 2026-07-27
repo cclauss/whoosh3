@@ -14,6 +14,7 @@ Analyzers
 .. autofunction:: StandardAnalyzer
 .. autofunction:: StemmingAnalyzer
 .. autofunction:: FancyAnalyzer
+.. autofunction:: CJKAnalyzer
 .. autofunction:: NgramAnalyzer
 .. autofunction:: NgramWordAnalyzer
 .. autofunction:: LanguageAnalyzer
@@ -45,6 +46,7 @@ Filters
 .. autoclass:: StopFilter
 .. autoclass:: StemFilter
 .. autoclass:: CharsetFilter
+.. autoclass:: CJKFilter
 .. autoclass:: NgramFilter
 .. autoclass:: IntraWordFilter
 .. autoclass:: CompoundWordFilter

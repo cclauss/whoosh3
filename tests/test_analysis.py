@@ -723,3 +723,71 @@ def test_normalizing_tokenizer_form_validation_and_equality():
     from_nfc = [t.text for t in nfd(unicodedata.normalize("NFC", "caf\u00e9"))]
     from_nfd = [t.text for t in nfd(unicodedata.normalize("NFD", "cafe\u0301"))]
     assert from_nfc == from_nfd == ["cafe"]
+
+
+def test_cjk_filter():
+    # A run of CJK characters in a single token is split into unigrams, while
+    # non-CJK text is left grouped.
+    cf = analysis.RegexTokenizer() | analysis.CJKFilter()
+    assert [t.text for t in cf("私は日本語")] == ["私", "は", "日", "本", "語"]
+
+    # Mixed Latin + CJK: Latin run stays whole, each CJK char is its own token.
+    assert [t.text for t in cf("AI技術")] == ["AI", "技", "術"]
+
+    # Pure ASCII passes through untouched (fast path).
+    assert [t.text for t in cf("hello world")] == ["hello", "world"]
+
+    # Korean (Hangul) and Chinese are handled too.
+    assert [t.text for t in cf("서울")] == ["서", "울"]
+    assert [t.text for t in cf("全文搜索")] == ["全", "文", "搜", "索"]
+
+
+def test_cjk_filter_positions_and_chars():
+    # Splitting one token into several must renumber positions consecutively
+    # (phrase queries rely on this) and keep correct character offsets.
+    stream = analysis.RegexTokenizer()("a日本b", positions=True, chars=True)
+    out = [(t.text, t.pos, t.startchar, t.endchar) for t in analysis.CJKFilter()(stream)]
+    assert out == [
+        ("a", 0, 0, 1),
+        ("日", 1, 1, 2),
+        ("本", 2, 2, 3),
+        ("b", 3, 3, 4),
+    ]
+
+
+def test_cjk_analyzer():
+    ana = analysis.CJKAnalyzer()
+    # Japanese sentence -> per-character tokens (particles included).
+    assert [t.text for t in ana("私は日本語を勉強します")] == list("私は日本語を勉強します")
+    # Latin words are lowercased and grouped; CJK split out.
+    assert [t.text for t in ana("Searching 東京")] == ["searching", "東", "京"]
+    # Single-character CJK tokens are NOT dropped (minsize=1), but English
+    # stop words still are.
+    assert [t.text for t in ana("the 火")] == ["火"]
+
+
+def test_cjk_analyzer_search():
+    schema = fields.Schema(
+        path=fields.ID(stored=True),
+        content=fields.TEXT(analyzer=analysis.CJKAnalyzer(), stored=True),
+    )
+    ix = RamStorage().create_index(schema)
+    with ix.writer() as w:
+        w.add_document(path="jp", content="私は日本語を勉強します。東京に住んでいます。")
+        w.add_document(path="cn", content="全文搜索很有用")
+        w.add_document(path="en", content="searching english notes")
+
+    with ix.searcher() as s:
+        qp = qparser.QueryParser("content", ix.schema)
+
+        def paths(q):
+            return sorted(hit["path"] for hit in s.search(qp.parse(q)))
+
+        assert paths("日本語") == ["jp"]
+        assert paths("東京") == ["jp"]
+        assert paths("全文") == ["cn"]
+        assert paths("searching") == ["en"]
+        # Quoted phrase matches adjacent characters only.
+        assert paths('"日本語を勉強"') == ["jp"]
+        # No false positives for a term that isn't present.
+        assert paths("存在しない") == []

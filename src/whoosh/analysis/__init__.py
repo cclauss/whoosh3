@@ -69,6 +69,7 @@ from whoosh.analysis.acore import (
 )
 from whoosh.analysis.analyzers import (
     Analyzer,
+    CJKAnalyzer,
     FancyAnalyzer,
     IDAnalyzer,
     KeywordAnalyzer,
@@ -80,6 +81,7 @@ from whoosh.analysis.analyzers import (
 )
 from whoosh.analysis.filters import (
     STOP_WORDS,
+    CJKFilter,
     CharsetFilter,
     Composable,
     DelimitedAttributeFilter,

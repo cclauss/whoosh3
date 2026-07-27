@@ -6,6 +6,28 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.28.0] - 2026-07-27
+
+### Added
+- **CJK (Chinese / Japanese / Korean) text support** via a new `CJKFilter` and
+  `CJKAnalyzer` in `whoosh.analysis`. CJK scripts don't put spaces between
+  words, so the default `RegexTokenizer` (which splits on `\w+` runs) indexes a
+  whole CJK phrase as a *single* token — meaning a search only matches if the
+  query happens to equal the entire run. `CJKFilter` splits any run of CJK
+  characters into individual single-character tokens (unigram indexing, the
+  same strategy Lucene's CJK analyzer uses) while leaving Latin/other text
+  untouched, so both single-character terms and quoted phrases match. Because it
+  only touches CJK characters, it composes onto existing analyzers
+  (`StemmingAnalyzer() | CJKFilter()`) without changing behaviour for other
+  languages. `CJKAnalyzer` bundles a tokenizer + lowercase + `minsize=1` stop
+  filter + `CJKFilter` for the common case. Positions are renumbered so adjacent
+  CJK characters occupy consecutive positions (phrase queries rely on this), and
+  character offsets are preserved for highlighting. Covers Han ideographs
+  (incl. Extensions A–F), Hiragana/Katakana (incl. halfwidth), and Hangul.
+  Four regression tests in `tests/test_analysis.py` cover tokenization,
+  positions/offsets, and an end-to-end index-and-search including phrase and
+  no-false-positive cases.
+
 ## [3.27.0] - 2026-07-27
 
 ### Added

@@ -26,7 +26,12 @@
 # policies, either expressed or implied, of Matt Chaput.
 
 from whoosh.analysis.acore import Composable, CompositionError
-from whoosh.analysis.filters import STOP_WORDS, LowercaseFilter, StopFilter
+from whoosh.analysis.filters import (
+    STOP_WORDS,
+    CJKFilter,
+    LowercaseFilter,
+    StopFilter,
+)
 from whoosh.analysis.intraword import IntraWordFilter
 from whoosh.analysis.morph import StemFilter
 from whoosh.analysis.tokenizers import (
@@ -233,6 +238,41 @@ def StemmingAnalyzer(
     if stoplist is not None:
         chain = chain | StopFilter(stoplist=stoplist, minsize=minsize, maxsize=maxsize)
     return chain | StemFilter(stemfn=stemfn, ignore=ignore, cachesize=cachesize)
+
+
+def CJKAnalyzer(expression=default_pattern, stoplist=STOP_WORDS, gaps=False):
+    """Composes a :class:`~whoosh.analysis.RegexTokenizer` with a
+    :class:`~whoosh.analysis.LowercaseFilter`, an optional
+    :class:`~whoosh.analysis.StopFilter`, and a
+    :class:`~whoosh.analysis.CJKFilter`, producing an analyzer suitable for
+    text that mixes CJK (Chinese, Japanese, Korean) and Western scripts.
+
+    Each CJK character is indexed as its own token (unigram indexing), so both
+    single-character terms and quoted phrases match, while Latin word runs are
+    lowercased and stop-filtered as usual.
+
+    >>> ana = CJKAnalyzer()
+    >>> [token.text for token in ana(u"私は日本語を勉強します")]
+    ['私', 'は', '日', '本', '語', 'を', '勉', '強', 'し', 'ま', 'す']
+    >>> [token.text for token in ana(u"searching 東京")]
+    ['searching', '東', '京']
+
+    Note that the stop filter uses ``minsize=1`` so that single-character CJK
+    tokens are not dropped; the English stop word list still applies to Latin
+    tokens.
+
+    :param expression: The regular expression pattern to use to extract tokens.
+    :param stoplist: A list of stop words. Set this to None to disable the stop
+        word filter.
+    :param gaps: If True, the tokenizer *splits* on the expression, rather than
+        matching on the expression.
+    """
+
+    ret = RegexTokenizer(expression=expression, gaps=gaps)
+    chain = ret | LowercaseFilter()
+    if stoplist is not None:
+        chain = chain | StopFilter(stoplist=stoplist, minsize=1)
+    return chain | CJKFilter()
 
 
 def FancyAnalyzer(

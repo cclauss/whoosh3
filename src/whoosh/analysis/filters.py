@@ -531,3 +531,105 @@ class SubstitutionFilter(Filter):
         for t in tokens:
             t.text = pattern.sub(replacement, t.text)
             yield t
+
+
+# CJK (Chinese / Japanese / Korean) support
+
+
+def _is_cjk(cp):
+    """Return True if the given Unicode codepoint (int) is a CJK "letter"
+    character (Han ideograph, Kana, or Hangul) that should be indexed as its own
+    unigram token. Punctuation and symbol blocks are deliberately excluded so
+    they act as token separators rather than becoming tokens themselves.
+    """
+    return (
+        0x3040 <= cp <= 0x30FF  # Hiragana + Katakana
+        or 0x31F0 <= cp <= 0x31FF  # Katakana Phonetic Extensions
+        or 0x3400 <= cp <= 0x4DBF  # CJK Unified Ideographs Extension A
+        or 0x4E00 <= cp <= 0x9FFF  # CJK Unified Ideographs
+        or 0xF900 <= cp <= 0xFAFF  # CJK Compatibility Ideographs
+        or 0xFF66 <= cp <= 0xFF9D  # Halfwidth Katakana
+        or 0x1100 <= cp <= 0x11FF  # Hangul Jamo
+        or 0x3130 <= cp <= 0x318F  # Hangul Compatibility Jamo
+        or 0xA960 <= cp <= 0xA97F  # Hangul Jamo Extended-A
+        or 0xAC00 <= cp <= 0xD7A3  # Hangul Syllables
+        or 0xD7B0 <= cp <= 0xD7FF  # Hangul Jamo Extended-B
+        or 0x20000 <= cp <= 0x2A6DF  # CJK Unified Ideographs Extension B
+        or 0x2A700 <= cp <= 0x2EBEF  # Extensions C..F
+        or 0x2F800 <= cp <= 0x2FA1F  # CJK Compatibility Ideographs Supplement
+    )
+
+
+class CJKFilter(Filter):
+    """Splits any run of CJK (Chinese, Japanese, Korean) characters in a token
+    into individual single-character tokens (unigram indexing), while leaving
+    non-CJK text untouched.
+
+    CJK scripts generally don't put spaces between words, so a whitespace/word
+    tokenizer such as :class:`~whoosh.analysis.RegexTokenizer` (the default)
+    emits an entire CJK phrase as a *single* token, which then only matches a
+    query that happens to equal the whole run. Indexing each CJK character on
+    its own position lets both single-character terms and quoted phrases match,
+    the same strategy Lucene's CJK analyzer uses.
+
+    Because it only touches CJK characters, this filter can be appended to an
+    existing analyzer to add CJK support without changing behaviour for other
+    languages::
+
+        >>> from whoosh.analysis import StemmingAnalyzer, CJKFilter
+        >>> ana = StemmingAnalyzer() | CJKFilter()
+        >>> [t.text for t in ana(u"studying 日本語")]
+        ['studi', '日', '本', '語']
+
+    A mixed token like ``AI技術`` becomes ``['AI', '技', '術']``; ASCII/Latin
+    word runs keep their original grouping (and any stemming applied earlier).
+    Positions are renumbered so that adjacent CJK characters occupy consecutive
+    positions, which is what phrase queries rely on.
+    """
+
+    def __call__(self, tokens):
+        pos = None
+        for t in tokens:
+            text = t.text
+            # Fast path: no CJK characters -> pass the token through unchanged
+            # (but keep positions consistent if we've already split earlier
+            # tokens in this stream).
+            if not any(_is_cjk(ord(c)) for c in text):
+                if t.positions:
+                    if pos is None:
+                        pos = t.pos
+                    else:
+                        pos += 1
+                        t.pos = pos
+                yield t
+                continue
+
+            chars = t.chars
+            startchar = t.startchar if chars else 0
+
+            # Walk the token text, emitting maximal non-CJK runs as one token
+            # and each CJK character as its own token, preserving order.
+            i = 0
+            n = len(text)
+            while i < n:
+                if _is_cjk(ord(text[i])):
+                    seg = text[i]
+                    seg_start = i
+                    i += 1
+                else:
+                    seg_start = i
+                    while i < n and not _is_cjk(ord(text[i])):
+                        i += 1
+                    seg = text[seg_start:i]
+
+                t.text = seg
+                if t.positions:
+                    if pos is None:
+                        pos = t.pos
+                    else:
+                        pos += 1
+                    t.pos = pos
+                if chars:
+                    t.startchar = startchar + seg_start
+                    t.endchar = startchar + seg_start + len(seg)
+                yield t
