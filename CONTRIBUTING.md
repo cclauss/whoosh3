@@ -54,13 +54,25 @@ See [`benchmark/README.md`](benchmark/README.md) for details.
 ### Cutting a release
 
 A single release commit should bump the version everywhere it is pinned, so CI
-stays green. The `test_site_version_sync` tests guard against drift:
+stays green. The `test_site_version_sync` tests guard against drift, and a
+helper script bumps every pinned spot at once so none are forgotten:
 
-1. `src/whoosh/__init__.py` — `__version__` tuple.
+```bash
+python scripts/bump_version.py 3.29.0      # edits the package + site together
+python scripts/bump_version.py --check     # verify everything is in sync
+```
+
+That single command handles items 1, 3 and 4 below; you still edit the
+changelog by hand:
+
+1. `src/whoosh/__init__.py` — `__version__` tuple. *(script)*
 2. `CHANGELOG.md` — move the `[Unreleased]` entries under a new dated heading.
-3. `demo/index.html` — the JSON-LD `"softwareVersion"` field.
-4. `demo/is-whoosh-still-maintained.html` — the advertised `whoosh3 X.Y.Z`.
+3. `demo/index.html` — the JSON-LD `"softwareVersion"` field. *(script)*
+4. `demo/is-whoosh-still-maintained.html` — the advertised `whoosh3 X.Y.Z`. *(script)*
 
-Then tag `vX.Y.Z`; CI publishes to PyPI and deploys the site.
+Commit all of that together, then tag `vX.Y.Z`; CI publishes to PyPI and
+deploys the site. Because the version bump and the site update land in the
+**same** commit, the release commit's CI is green — no red run between the
+release and a follow-up docs fix.
 
 Thank you for helping keep Whoosh healthy!
