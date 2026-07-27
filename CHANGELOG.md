@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.27.0] - 2026-07-27
+
 ### Added
 - Type hints for the public API of `whoosh.classify` — the query-expansion
   models `ExpansionModel`, `Bo1Model`, `Bo2Model`, `KLModel`, and the `Expander`
