@@ -73,6 +73,19 @@ up to four words between them.
     need every word to count, index the field with an analyzer that does not
     remove tokens, e.g. ``TEXT(analyzer=RegexTokenizer() | LowercaseFilter())``.
 
+    If you want to keep stop-word filtering (for a smaller index and better
+    relevance) but still have removed words *count* toward proximity, pass
+    ``renumber=False`` to the :class:`~whoosh.analysis.StopFilter`. By default
+    the filter renumbers the surviving tokens so their positions are
+    contiguous, which collapses the gaps left by removed words; with
+    ``renumber=False`` those gaps are preserved, so slop is measured against
+    the original word positions::
+
+        from whoosh.analysis import RegexTokenizer, LowercaseFilter, StopFilter
+
+        analyzer = RegexTokenizer() | LowercaseFilter() | StopFilter(renumber=False)
+        schema = Schema(content=TEXT(analyzer=analyzer))
+
 
 Boolean operators
 =================

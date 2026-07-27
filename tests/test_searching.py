@@ -1937,3 +1937,31 @@ def test_phrase_plugin_degrade_option():
         assert q.degrade is True
         r = s.search(q)
         assert [hit["id"] for hit in r] == ["a"]
+
+
+def test_proximity_stopfilter_renumber_gh48():
+    # Regression for mchaput/whoosh#48: proximity (~N) "slop" is measured in
+    # *indexed* positions. The default StandardAnalyzer removes stop words and
+    # short tokens (minsize) AND renumbers survivors so their positions are
+    # contiguous -- which collapses the gaps and makes far-apart words appear
+    # adjacent. Passing renumber=False to StopFilter preserves the gaps so slop
+    # reflects the original word positions.
+    default = fields.Schema(content=fields.TEXT(stored=True))
+    keepgaps = analysis.RegexTokenizer() | analysis.LowercaseFilter() | analysis.StopFilter(renumber=False)
+    kept = fields.Schema(content=fields.TEXT(stored=True, analyzer=keepgaps))
+
+    text = "hello to a the but and for this world"  # many stop words between
+
+    def matches(schema):
+        st = RamStorage()
+        ix = st.create_index(schema)
+        with ix.writer() as w:
+            w.add_document(content=text)
+        with ix.searcher() as s:
+            q = qparser.QueryParser("content", schema).parse('"hello world"~2')
+            return len(s.search(q)) > 0
+
+    # Default analyzer renumbers -> stop words collapse -> spurious ~2 match.
+    assert matches(default) is True
+    # renumber=False keeps positional gaps -> hello/world are far apart -> no match.
+    assert matches(kept) is False
