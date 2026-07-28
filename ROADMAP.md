@@ -46,6 +46,17 @@ About section of the README.)*
       exactly what this roadmap exists to invite; see the
       [good-first-issue backlog](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
+## Done (3.29.0 — released 2026-07-28)
+
+- [x] **Complete public-API type hints for the read/write/spell surface.**
+      `whoosh.reading` (`IndexReader` public read API + `TermInfo`, gh#64),
+      `whoosh.writing` (`IndexWriter` public write API, gh#62), and
+      `whoosh.spelling` (`Corrector`/`Correction`/`QueryCorrector`, gh#61) are
+      now annotated end-to-end, joining the already-typed `index`, `fields`,
+      `qparser`, `searching`, `sorting`, `scoring`, `highlight`, and `query`
+      layers. A `mypy` smoke job and `tests/typing_smoke.py` guard the surface
+      against regressions. Types are correct-only, never fabricated.
+
 ## Now (next patch/minor)
 
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
