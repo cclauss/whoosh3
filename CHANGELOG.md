@@ -24,6 +24,13 @@ All notable changes to this project are documented here. This project follows
   [PEP 484](https://peps.python.org/pep-0484/) annotations. Heavy imports
   (`Matcher`, `IndexReader`, `Searcher`, `Token`) stay behind `TYPE_CHECKING`,
   so there is no import-time cost. (gh#69)
+- Type hints for the `whoosh.analysis.ngrams` public API — `NgramTokenizer`
+  and `NgramFilter` (both `__call__`s are generators, annotated
+  `Iterator[Token]`; constructors take `int` sizes and an optional `at`
+  string), and the `NgramAnalyzer` / `NgramWordAnalyzer` factories
+  (`→ CompositeAnalyzer`). `CompositeAnalyzer` stays under `TYPE_CHECKING`
+  because `analysis.analyzers` imports back into this module. Thanks to
+  @Rfannn for their first contribution. (gh#71)
 
 ## [3.29.0] - 2026-07-28
 
