@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.30.0] - 2026-07-29
+
 ### Added
 - Type hints for the `whoosh.query.Query` base-class public API — the generic
   query surface every query type inherits and that tree-transformation and
