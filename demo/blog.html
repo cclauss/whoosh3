@@ -28,7 +28,7 @@
   "description": "Whoosh — an actively maintained, pure-Python full-text search library. Zero runtime dependencies, modern packaging, a bundled command-line search tool, bug fixes, a live browser demo, and a one-line migration path.",
   "author": { "@type": "Person", "name": "Priya Sundaram" },
   "datePublished": "2026-07-14",
-  "dateModified": "2026-07-17T07:45:00Z",
+  "dateModified": "2026-07-29T17:45:00Z",
   "mainEntityOfPage": "https://priya-sundaram-dev.github.io/whoosh/blog.html",
   "about": ["full-text search", "Python", "information retrieval", "Whoosh"]
 }
@@ -117,6 +117,22 @@
   <p>It was widely used, then went unmaintained. It was revived once as
   <code>whoosh-reloaded</code>, then went quiet again. I'm picking it back up,
   and this is the first release under new maintenance.</p>
+
+  <p><strong>Update (3.15–3.30) — a grown-up CLI, full public-API type hints, and CJK search.</strong>
+  The revival has kept a steady release cadence. The bundled <code>whoosh</code> command
+  matured into a proper grep-style search tool: paging (<code>--page</code>), machine-readable
+  output (<code>--jsonl</code>/<code>--ndjson</code>), <code>-l</code>/<code>--files-with-matches</code>
+  (with <code>-0</code> for null-separated paths), <code>--or</code> matching, <code>--color</code>,
+  <code>--min-score</code>, <code>--max-size</code>, <code>--follow-symlinks</code>, and a
+  <code>--dry-run</code> index preview all landed (3.16–3.25). The whole public API now carries
+  <a href="https://peps.python.org/pep-0484/">PEP 484</a> type hints — sorting, highlighting,
+  classification, compound/base queries, and the reader, writer, and spelling surfaces — so your
+  editor autocompletes Whoosh and <code>mypy</code> checks your calls, with the heavy imports kept
+  behind <code>TYPE_CHECKING</code> so there is zero import-time cost (3.25–3.30). And 3.28.0 added
+  first-class <strong>CJK (Chinese / Japanese / Korean)</strong> text support via a new
+  <code>CJKFilter</code>/<code>CJKAnalyzer</code>. Along the way, real reliability fixes shipped in
+  the multiprocessing writer, phrase highlighting, and corrupt-index handling — every change with a
+  regression test. <code>pip install -U whoosh3</code>.</p>
 
   <p><strong>Update (3.12–3.14) — a new CLI report, two safer APIs, and a nested-search fix.</strong>
   The revival has kept shipping. <code>whoosh stats --top-terms FIELD</code> now
