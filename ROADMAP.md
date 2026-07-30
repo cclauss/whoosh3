@@ -65,6 +65,18 @@ About section of the README.)*
       classifier. Whoosh now supports 3.9–3.14.
 - [ ] Triage the inherited issue backlog; label, reproduce, close stale. Two
       long-standing bugs already fixed (gh#99, gh#116); more to review.
+- [ ] **Type hints across the `whoosh.analysis` package** — a coordinated,
+      module-at-a-time sweep, mostly driven by first-time contributors.
+      `whoosh.analysis.tokenizers` (gh#72, by
+      [@mani787060](https://github.com/mani787060)) and
+      `whoosh.analysis.filters` (gh#76, by
+      [@CrucialVansh](https://github.com/CrucialVansh)) are annotated and
+      merged; `whoosh.analysis.morph` (gh#77) and `whoosh.analysis.acore`
+      (gh#80) are open as
+      [good-first-issues](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
+      — pick one up and it will ship in the next `whoosh.analysis` typing
+      release. Types are correct-only, never fabricated, and guarded by the
+      `mypy` smoke job.
 - [x] `py.typed` marker + `Typing :: Typed` classifier shipped in **3.1.0**;
       the most-used public API is now annotated end-to-end (gh#3): `index`
       entry points (`create_in`, `open_dir`, `exists_in`, `exists`), the
