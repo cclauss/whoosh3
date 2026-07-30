@@ -23,6 +23,12 @@ All notable changes to this project are documented here. This project follows
   `Iterator[Token]` returns). `logging`, `re`, and
   `CompositeAnalyzer` stay behind `TYPE_CHECKING` to avoid any import-time
   cost. (gh#76)
+- Type hints for the `whoosh.analysis.acore` public API — `Token` now declares
+  its common public attributes (`text: str`, `positions`/`chars`/`stopped`/
+  `removestops: bool`, `boost: float`, `mode: str`) while keeping its dynamic
+  attributes intact, and `Composable.__or__` is annotated to return a
+  `CompositeAnalyzer` (kept under `TYPE_CHECKING` to avoid an import cycle).
+  Thanks to @tomatotomata for their first contribution. (gh#80)
 
 ## [3.30.0] - 2026-07-29
 
