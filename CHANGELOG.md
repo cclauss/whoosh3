@@ -6,6 +6,14 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- Type hints for the `whoosh.analysis.tokenizers` public API — the
+  `IDTokenizer`, `RegexTokenizer`, and `NormalizingRegexTokenizer`
+  `__call__`/`__init__` signatures now carry [PEP 484](https://peps.python.org/pep-0484/)
+  annotations (`value: str`, boolean/int options, `Iterator[Token]` returns),
+  with `CompositeAnalyzer` kept under `TYPE_CHECKING` to avoid an import cycle.
+  Thanks to @mani787060 for their first contribution. (gh#72)
+
 ## [3.30.0] - 2026-07-29
 
 ### Added

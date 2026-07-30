@@ -31,13 +31,12 @@ import re
 import unicodedata
 from collections.abc import Iterator
 from typing import TYPE_CHECKING, Any
-from typing import TYPE_CHECKING
+
 if TYPE_CHECKING:
     from whoosh.analysis.analyzers import CompositeAnalyzer
 
 from whoosh.analysis.acore import Composable, Token
 from whoosh.util.text import rcompile
-
 
 # Tokenizers
 
@@ -84,7 +83,9 @@ class IDTokenizer(Tokenizer):
         yield t
 
 
-default_pattern = re.compile(r"[\w\*]+(\.?[\w\*]+)*")
+default_pattern = rcompile(r"[\w\*]+(\.?[\w\*]+)*")
+
+
 class RegexTokenizer(Tokenizer):
     """
     Uses a regular expression to extract tokens from text.
