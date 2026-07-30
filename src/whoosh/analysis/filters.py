@@ -36,9 +36,6 @@ if TYPE_CHECKING:
     import logging
     import re
     from collections.abc import Iterable, Iterator
-    from typing import Optional, Union
-
-    from whoosh.analysis.analyzers import CompositeAnalyzer
 
 from itertools import chain
 
@@ -413,7 +410,7 @@ class CharsetFilter(Filter):
 
     __inittypes__ = {"charmap": dict}
 
-    def __init__(self, charmap : dict) -> None:
+    def __init__(self, charmap: dict) -> None:
         """
         :param charmap: a dictionary mapping from integer character numbers to
             unicode characters, as required by the unicode.translate() method.
@@ -428,7 +425,7 @@ class CharsetFilter(Filter):
             and self.charmap == other.charmap
         )
 
-    def __call__(self, tokens : Iterable[Token]) -> Iterator[Token]:
+    def __call__(self, tokens: Iterable[Token]) -> Iterator[Token]:
         assert hasattr(tokens, "__iter__")
         charmap = self.charmap
         for t in tokens:
@@ -473,7 +470,7 @@ class DelimitedAttributeFilter(Filter):
         self.default = default
         self.type = type
 
-    def __eq__(self, other : object) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             other
             and self.__class__ is other.__class__
@@ -482,7 +479,7 @@ class DelimitedAttributeFilter(Filter):
             and self.default == other.default
         )
 
-    def __call__(self, tokens : Iterable[Token]) -> Iterator[Token]:
+    def __call__(self, tokens: Iterable[Token]) -> Iterator[Token]:
         delim = self.delim
         attr = self.attr
         default = self.default
@@ -521,7 +518,7 @@ class SubstitutionFilter(Filter):
         ana = rt | sf
     """
 
-    def __init__(self, pattern: str | re.Pattern , replacement: str) -> None:
+    def __init__(self, pattern: str | re.Pattern, replacement: str) -> None:
         """
         :param pattern: a pattern string or compiled regular expression object
             describing the text to replace.
@@ -602,7 +599,7 @@ class CJKFilter(Filter):
     positions, which is what phrase queries rely on.
     """
 
-    def __call__(self, tokens : Iterable[Token]) -> Iterator[Token]:
+    def __call__(self, tokens: Iterable[Token]) -> Iterator[Token]:
         pos = None
         for t in tokens:
             text = t.text
