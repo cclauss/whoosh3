@@ -8,6 +8,12 @@ All notable changes to this project are documented here. This project follows
 
 ### Added
 
+- Type hints for the `whoosh.analysis.morph` public API — `StemFilter.__call__`
+  and `DoubleMetaphoneFilter.__call__` now carry [PEP 484](https://peps.python.org/pep-0484/)
+  annotations (`tokens: Iterator[Token]` in, `Iterator[Token]` out); this also
+  covers `PyStemmerFilter`, which subclasses `StemFilter`. `Token` is kept under
+  `TYPE_CHECKING` to avoid an import cycle. Thanks to @mani787060 for their
+  second contribution. (gh#77)
 - New example `examples/mcp_server.py`: expose a Whoosh index to LLM agents over
   the [Model Context Protocol](https://modelcontextprotocol.io/) as `search` and
   `fetch` tools, using the official `mcp` SDK's `FastMCP`. The `SearchCore` class
