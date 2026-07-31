@@ -14,15 +14,21 @@ All notable changes to this project are documented here. This project follows
   covers `PyStemmerFilter`, which subclasses `StemFilter`. `Token` is kept under
   `TYPE_CHECKING` to avoid an import cycle. Thanks to @mani787060 for their
   second contribution. (gh#77)
-- New example `examples/mcp_server.py`: expose a Whoosh index to LLM agents over
-  the [Model Context Protocol](https://modelcontextprotocol.io/) as `search` and
-  `fetch` tools, using the official `mcp` SDK's `FastMCP`. The `SearchCore` class
-  has no MCP dependency, so it is reusable behind any agent framework and its
-  search/fetch logic is covered by the example's own runnable checks. Point the
-  server at your own corpus with `SearchCore.from_directory(dir)` or the
-  `WHOOSH_MCP_CORPUS` environment variable, which indexes a directory of
-  `.md`/`.txt`/`.rst` files (one document per file) instead of the built-in
-  samples. Companion guide published at `whoosh-mcp-server-agent-search-tool.html`.
+- **MCP server, now first-class and installable.** The
+  [Model Context Protocol](https://modelcontextprotocol.io/) integration graduates
+  from an example to a supported module, `whoosh.mcp`, plus a `whoosh-mcp` console
+  script and a `whoosh3[mcp]` optional dependency. Serve a folder of your own docs
+  to an AI agent as `search` and `fetch` tools with `pip install "whoosh3[mcp]"`
+  and `whoosh-mcp ~/notes` — pure Python, no server, no native deps. The
+  `SearchCore` class (`whoosh.mcp.SearchCore`) has no MCP dependency, so it is
+  reusable behind any agent framework (LangChain/LlamaIndex tools, function
+  calling) and importable/unit-testable on its own; `SearchCore.from_directory()`
+  or the `WHOOSH_MCP_CORPUS` environment variable index a directory of
+  `.md`/`.txt`/`.rst` files (one document per file), else built-in samples are
+  used. `build_mcp_server()` raises a clear "install whoosh3[mcp]" error when the
+  SDK is absent. `examples/mcp_server.py` is retained as a thin, runnable wrapper.
+  Covered by a new `tests/test_mcp.py` suite. Companion guide at
+  `whoosh-mcp-server-agent-search-tool.html`.
 
 ## [3.31.0] - 2026-07-31
 

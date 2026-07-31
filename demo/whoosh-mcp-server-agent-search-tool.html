@@ -94,11 +94,20 @@
   </p>
 
   <h2>Install</h2>
-  <pre><code>pip install whoosh3 mcp</code></pre>
+  <pre><code>pip install "whoosh3[mcp]"</code></pre>
   <p>
     <code>whoosh3</code> is the actively-maintained continuation of Whoosh
-    (Python 3.9–3.14); <code>mcp</code> is the official Model Context Protocol SDK.
+    (Python 3.9–3.14); the <code>[mcp]</code> extra pulls in the official Model
+    Context Protocol SDK.
   </p>
+
+  <h2>Run it in one line</h2>
+  <p>
+    The package ships a <code>whoosh-mcp</code> console script. Point it at a
+    folder of <code>.md</code>/<code>.txt</code>/<code>.rst</code> files and it
+    serves them to an agent over stdio — one document per file:
+  </p>
+  <pre><code>whoosh-mcp ~/notes        # or omit the path to serve built-in samples</code></pre>
 
   <h2>A reusable search core (no MCP dependency)</h2>
   <p>
@@ -181,7 +190,7 @@ if __name__ == "__main__":
   </p>
   <pre><code>{
   "mcpServers": {
-    "whoosh": { "command": "python", "args": ["/path/to/mcp_server.py"] }
+    "whoosh": { "command": "whoosh-mcp", "args": ["/path/to/your/docs"] }
   }
 }</code></pre>
   <p>
@@ -220,7 +229,7 @@ if __name__ == "__main__":
   </ul>
 
   <div class="cta">
-    Install: <code>pip install whoosh3 mcp</code> · Full runnable example:
+    Install: <code>pip install "whoosh3[mcp]"</code> · Full runnable example:
     <a href="https://github.com/priya-sundaram-dev/whoosh/blob/main/examples/mcp_server.py">examples/mcp_server.py</a>
     · Related:
     <a href="./whoosh-rag-hybrid-search.html">hybrid RAG retrieval</a>,

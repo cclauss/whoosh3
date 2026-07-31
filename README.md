@@ -149,6 +149,9 @@ reference (all flags, exit codes, and how it maps onto the API):
   - [Whoosh for RAG: BM25 keyword retrieval & hybrid search](https://priya-sundaram-dev.github.io/whoosh/whoosh-rag-hybrid-search.html)
     — pure-Python retrieval for LLM pipelines, no vector DB required
     (runnable code: [`examples/rag_retriever.py`](examples/rag_retriever.py))
+  - [Whoosh as an MCP server: a local search tool for AI agents](https://priya-sundaram-dev.github.io/whoosh/whoosh-mcp-server-agent-search-tool.html)
+    — `pip install "whoosh3[mcp]"` then `whoosh-mcp ~/notes` serves a folder of
+    docs to an agent as `search`/`fetch` tools (module: `whoosh.mcp`)
   - [Spelling, "did you mean?", and fuzzy search](https://priya-sundaram-dev.github.io/whoosh/whoosh-spelling-fuzzy-did-you-mean.html)
     — typo tolerance: suggestions, query correction, and fuzzy matching
 - **Docs site:** https://priya-sundaram-dev.github.io/whoosh/ (rebuilt; work in progress)
