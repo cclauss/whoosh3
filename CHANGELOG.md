@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.31.0] - 2026-07-31
+
 ### Added
 
 - Type hints for the `whoosh.analysis.tokenizers` public API — the
