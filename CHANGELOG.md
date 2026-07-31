@@ -18,8 +18,11 @@ All notable changes to this project are documented here. This project follows
   the [Model Context Protocol](https://modelcontextprotocol.io/) as `search` and
   `fetch` tools, using the official `mcp` SDK's `FastMCP`. The `SearchCore` class
   has no MCP dependency, so it is reusable behind any agent framework and its
-  search/fetch logic is covered by the example's own runnable checks. Companion
-  guide published at `whoosh-mcp-server-agent-search-tool.html`.
+  search/fetch logic is covered by the example's own runnable checks. Point the
+  server at your own corpus with `SearchCore.from_directory(dir)` or the
+  `WHOOSH_MCP_CORPUS` environment variable, which indexes a directory of
+  `.md`/`.txt`/`.rst` files (one document per file) instead of the built-in
+  samples. Companion guide published at `whoosh-mcp-server-agent-search-tool.html`.
 
 ## [3.31.0] - 2026-07-31
 

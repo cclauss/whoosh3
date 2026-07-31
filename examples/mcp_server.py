@@ -17,6 +17,11 @@ Run it as a real MCP server (requires the official SDK: ``pip install mcp``)::
     pip install whoosh3 mcp
     python examples/mcp_server.py            # stdio transport, ready for an agent
 
+Serve your *own* files instead of the built-in samples by pointing the server
+at a directory of ``.md`` / ``.txt`` / ``.rst`` documents::
+
+    WHOOSH_MCP_CORPUS=~/notes python examples/mcp_server.py
+
 Point an MCP client at it (e.g. in Claude Desktop's config)::
 
     {
@@ -97,6 +102,39 @@ class SearchCore:
         writer.commit()
         return cls(index_dir=index_dir)
 
+    @classmethod
+    def from_directory(cls, corpus_dir, index_dir=None, exts=(".md", ".txt", ".rst")):
+        """Build a search core over a real directory of text/markdown files.
+
+        Each file becomes one document: ``id`` is its path relative to
+        ``corpus_dir``, ``title`` is the first non-empty line (or the filename),
+        and ``body`` is the full file text. Point an agent at your own notes,
+        docs, or wiki with ``SearchCore.from_directory("~/notes")``.
+        """
+        corpus_dir = os.path.abspath(os.path.expanduser(corpus_dir))
+        docs = []
+        for root, _dirs, files in os.walk(corpus_dir):
+            for name in sorted(files):
+                if exts and not name.lower().endswith(tuple(exts)):
+                    continue
+                path = os.path.join(root, name)
+                try:
+                    with open(path, encoding="utf-8", errors="replace") as fh:
+                        text = fh.read()
+                except OSError:
+                    continue
+                rel = os.path.relpath(path, corpus_dir)
+                title = next(
+                    (ln.strip().lstrip("#").strip() for ln in text.splitlines() if ln.strip()),
+                    name,
+                )
+                docs.append({"id": rel, "title": title, "body": text})
+        if not docs:
+            raise ValueError(
+                f"No indexable files ({', '.join(exts)}) found under {corpus_dir!r}"
+            )
+        return cls.build(docs=docs, index_dir=index_dir)
+
     def search(self, query, limit=5):
         ix = open_dir(self.index_dir)
         parser = MultifieldParser(["title", "body"], schema=ix.schema)
@@ -130,7 +168,9 @@ def build_mcp_server(core=None):
     """Wrap a SearchCore in a FastMCP server exposing search + fetch tools."""
     from mcp.server.fastmcp import FastMCP  # noqa: PLC0415  (pip install mcp)
 
-    core = core or SearchCore.build()
+    if core is None:
+        corpus = os.environ.get("WHOOSH_MCP_CORPUS")
+        core = SearchCore.from_directory(corpus) if corpus else SearchCore.build()
     mcp = FastMCP("whoosh-search")
 
     @mcp.tool()
