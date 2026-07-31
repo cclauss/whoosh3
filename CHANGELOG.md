@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.32.0] - 2026-07-31
+
 ### Added
 
 - Type hints for the `whoosh.analysis.morph` public API — `StemFilter.__call__`
