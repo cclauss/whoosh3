@@ -1,0 +1,14 @@
+.git
+.github
+dist
+build
+*.egg-info
+docs/_build
+.tox
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+benchmark
+stress
+sweep.yaml

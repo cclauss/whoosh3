@@ -194,6 +194,13 @@ if __name__ == "__main__":
   }
 }</code></pre>
   <p>
+    Prefer a container? The repository ships a <code>Dockerfile</code>, so you can
+    run the server without a local Python environment — mount your docs read-only
+    and keep stdin open for the stdio transport:
+  </p>
+  <pre><code>docker build -t whoosh-mcp .
+docker run --rm -i -v "$HOME/notes:/corpus:ro" whoosh-mcp /corpus</code></pre>
+  <p>
     The agent now sees a <code>search</code> tool and a <code>fetch</code> tool.
     Ask it a question and it will search your corpus, read the most relevant
     document, and answer with grounded, cited context — all backed by a local

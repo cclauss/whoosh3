@@ -6,6 +6,18 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- **Docker image for the MCP server.** A `Dockerfile` (plus `.dockerignore`) is
+  now shipped so `whoosh-mcp` can be built and run without a local Python
+  environment: `docker build -t whoosh-mcp .` then
+  `docker run --rm -i -v "$HOME/notes:/corpus:ro" whoosh-mcp /corpus`. The image
+  serves the built-in sample corpus with no argument, so it is introspectable out
+  of the box (useful for MCP registries and directories). The MCP guide documents
+  the container workflow alongside the pip install.
+- A `glama.json` manifest declaring the project maintainer, so the whoosh-mcp
+  server can be indexed and attributed in the Glama MCP directory.
+
 ## [3.32.0] - 2026-07-31
 
 ### Added
