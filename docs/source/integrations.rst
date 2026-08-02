@@ -291,6 +291,47 @@ without a full ``startproject`` layout — lives in ``examples/django_app.py``
 none at all, without PostgreSQL.
 
 
+Using whoosh3 with django-haystack
+==================================
+
+`django-haystack <https://github.com/django-haystack/django-haystack>`_ ships a
+``WhooshSearchBackend`` that imports the ``whoosh`` package directly. whoosh3 is
+published under the distribution name ``whoosh3`` but installs the same
+top-level ``whoosh`` module, so it is a **drop-in replacement** for Haystack's
+Whoosh backend — no code changes required.
+
+The one thing to know: Haystack's ``[whoosh]`` extra pins the unmaintained
+``Whoosh<3.0`` from 2016. Install whoosh3 *instead of* that extra so the
+maintained package wins::
+
+    pip install django-haystack whoosh3
+    # not:  pip install "django-haystack[whoosh]"   (that pins the old Whoosh 2.x)
+
+Point Haystack at the backend exactly as before::
+
+    # settings.py
+    HAYSTACK_CONNECTIONS = {
+        "default": {
+            "ENGINE": "haystack.backends.whoosh_backend.WhooshEngine",
+            "PATH": os.path.join(BASE_DIR, "whoosh_index"),
+        },
+    }
+
+Why bother? whoosh3 satisfies Haystack's runtime check
+(``whoosh.__version__ >= (2, 5, 0)``) and keeps every public API the backend
+uses (``whoosh.index``, ``whoosh.fields``, ``whoosh.analysis``,
+``whoosh.filedb.filestore``, ``whoosh.highlight``, ``whoosh.qparser``), while
+adding tested support for **Python 3.9–3.14**. The legacy ``Whoosh==2.7.4`` has
+latent breakage on newer interpreters — for example it calls ``cgi.escape`` in
+``whoosh/compat.py``, and the ``cgi`` module was removed in Python 3.13 — so a
+Haystack project on a current Python is exactly the case whoosh3 is meant to
+rescue.
+
+If you have both ``Whoosh`` and ``whoosh3`` installed at once they collide on
+the shared ``whoosh`` import name; uninstall the old one
+(``pip uninstall Whoosh``) so only whoosh3 provides the module.
+
+
 Whoosh vs. SQLite FTS5 and other options
 =========================================
 
