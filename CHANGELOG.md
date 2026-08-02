@@ -8,6 +8,10 @@ All notable changes to this project are documented here. This project follows
 
 ### Added
 
+- **Migration guide on the docs site.** The "Migrating to whoosh3" guide is now
+  a first-class page in the rendered documentation (previously only `MIGRATING.md`
+  at the repo root), so it is linked from the docs navigation and indexed by
+  search engines for users moving from `Whoosh` / `whoosh-reloaded`.
 - **Docker image for the MCP server.** A `Dockerfile` (plus `.dockerignore`) is
   now shipped so `whoosh-mcp` can be built and run without a local Python
   environment: `docker build -t whoosh-mcp .` then
