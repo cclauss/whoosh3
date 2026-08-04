@@ -253,7 +253,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     else:
         core = SearchCore.build()
 
-    build_mcp_server(core).run()
+    try:
+        server = build_mcp_server(core)
+    except ModuleNotFoundError as exc:
+        # The optional MCP SDK is missing. Show a clean, actionable message
+        # instead of a confusing chained traceback.
+        print(f"whoosh-mcp: {exc}", file=sys.stderr)
+        return 1
+
+    server.run()
     return 0
 
 

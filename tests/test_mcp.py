@@ -101,6 +101,25 @@ def test_main_missing_corpus_files_returns_error(tmp_path, capsys):
     assert "No indexable files" in capsys.readouterr().err
 
 
+def test_main_without_sdk_prints_clean_message_and_exits_1(monkeypatch, capsys):
+    # When the optional 'mcp' SDK is absent, `whoosh-mcp` should print a single
+    # actionable line (no chained traceback) and exit 1.
+    real_import = builtins.__import__
+
+    def fake_import(name, *args, **kwargs):
+        if name == "mcp" or name.startswith("mcp."):
+            raise ModuleNotFoundError("No module named 'mcp'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", fake_import)
+    rc = main([])
+    assert rc == 1
+    err = capsys.readouterr().err
+    assert err.strip().startswith("whoosh-mcp:")
+    assert 'pip install "whoosh3[mcp]"' in err
+    assert "Traceback" not in err
+
+
 def test_build_mcp_server_exposes_search_and_fetch_when_sdk_present():
     # Only runs where the optional 'mcp' SDK is installed; skipped otherwise.
     pytest.importorskip("mcp")

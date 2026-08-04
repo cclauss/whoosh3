@@ -6,6 +6,17 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.33.1] - 2026-08-04
+
+### Fixed
+
+- `whoosh-mcp` now fails gracefully when the optional `mcp` SDK is not
+  installed: it prints a single actionable line
+  (`whoosh-mcp: The MCP server requires the 'mcp' package. Install it with:
+  pip install "whoosh3[mcp]"`) and exits `1`, instead of dumping a chained
+  Python traceback. First impressions matter for the MCP audience trying the
+  server for the first time.
+
 ## [3.33.0] - 2026-08-04
 
 ### Added
