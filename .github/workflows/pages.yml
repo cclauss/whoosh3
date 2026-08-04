@@ -108,3 +108,45 @@ jobs:
           path: _site
       - id: deployment
         uses: actions/deploy-pages@v5
+
+      - name: Notify search engines via IndexNow
+        # Ping the IndexNow pool (Bing, Yandex, Seznam, DuckDuckGo) with the full
+        # URL set from the freshly built sitemap, so updated docs/tutorials get
+        # crawled promptly instead of waiting for the next organic recrawl.
+        # Key file lives at the site root; ownership is verified by fetching it.
+        continue-on-error: true
+        run: |
+          python - <<'PY'
+          import json, pathlib, re, urllib.request
+          site = pathlib.Path("_site")
+          key_files = sorted(site.glob("*.txt"))
+          key = None
+          for f in key_files:
+              txt = f.read_text().strip()
+              if re.fullmatch(r"[0-9a-fA-F]{16,64}", txt) and f.stem == txt:
+                  key = txt
+                  break
+          if not key:
+              print("No IndexNow key file found; skipping.")
+              raise SystemExit(0)
+          sm = (site / "sitemap.xml").read_text()
+          urls = re.findall(r"<loc>([^<]+)</loc>", sm)
+          host = "priya-sundaram-dev.github.io"
+          body = {
+              "host": host,
+              "key": key,
+              "keyLocation": f"https://{host}/whoosh/{key}.txt",
+              "urlList": urls,
+          }
+          req = urllib.request.Request(
+              "https://api.indexnow.org/indexnow",
+              data=json.dumps(body).encode(),
+              headers={"Content-Type": "application/json; charset=utf-8"},
+              method="POST",
+          )
+          try:
+              with urllib.request.urlopen(req, timeout=30) as r:
+                  print(f"IndexNow submitted {len(urls)} URLs -> HTTP {r.status}")
+          except Exception as e:
+              print(f"IndexNow ping failed (non-fatal): {e}")
+          PY
