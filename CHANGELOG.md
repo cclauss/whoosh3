@@ -6,8 +6,19 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.33.0] - 2026-08-04
+
 ### Added
 
+- Type hints for the `whoosh.analysis.analyzers` public API — `Analyzer`,
+  `CompositeAnalyzer` and the analyzer factory functions (e.g. `StandardAnalyzer`,
+  `StemmingAnalyzer`, `KeywordAnalyzer`, `FancyAnalyzer`, `LanguageAnalyzer`) now
+  carry [PEP 484](https://peps.python.org/pep-0484/) annotations, so editors and
+  `mypy` can type-check analyzer construction end to end. `StandardAnalyzer` is
+  now exercised in the typing smoke test. Typing-only; no runtime behaviour
+  change. Thanks to [@Kiet-B](https://github.com/Kiet-B) for the contribution
+  ([#87](https://github.com/priya-sundaram-dev/whoosh/pull/87), fixes
+  [#85](https://github.com/priya-sundaram-dev/whoosh/issues/85)).
 - **Migration guide on the docs site.** The "Migrating to whoosh3" guide is now
   a first-class page in the rendered documentation (previously only `MIGRATING.md`
   at the repo root), so it is linked from the docs navigation and indexed by
