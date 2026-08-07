@@ -534,6 +534,19 @@ def run() -> list[str]:
     tee_tokens: Iterator[Token] = tee_filter(tokenizer("Hello World"))
     assert all(isinstance(tok, Token) for tok in tee_tokens)
 
+    # whoosh.analysis.morph public API (gh#77): the stemming / phonetic filters
+    # behind StemmingAnalyzer and "sounds-like" matching. Their annotated
+    # __call__ takes an Iterator[Token] and returns an Iterator[Token], so the
+    # filter chain type-checks for downstream analyzer authors.
+    from whoosh.analysis.morph import DoubleMetaphoneFilter, StemFilter
+
+    stem_filter = StemFilter()
+    stem_tokens: Iterator[Token] = stem_filter(tokenizer("searching indexes"))
+    assert all(isinstance(tok, Token) for tok in stem_tokens)
+    dmeta_filter = DoubleMetaphoneFilter()
+    dmeta_tokens: Iterator[Token] = dmeta_filter(tokenizer("Smith Smyth"))
+    assert all(isinstance(tok, Token) for tok in dmeta_tokens)
+
     # whoosh.analysis.analyzers public API (gh#85): analyzer factories return
     # an Analyzer, and calling one with text yields an Iterator[Token].
     standard_analyzer = StandardAnalyzer()
