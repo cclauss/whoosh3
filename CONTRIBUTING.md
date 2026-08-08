@@ -6,6 +6,7 @@ bug reports, reproductions, docs, examples, and code.
 ## Ground rules
 
 - **Be kind.** This is a small, volunteer-scale project. Assume good faith.
+  All participation is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
 - **Keep Whoosh pure Python.** No mandatory native dependencies — the
   no-compile install is a headline feature. Optional accelerators, if any, go
   behind extras and must never be required.
