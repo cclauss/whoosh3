@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.35.0] - 2026-08-08
+
 ### Added
 
 - First-class LlamaIndex integration, shipped as `whoosh.llamaindex` and
