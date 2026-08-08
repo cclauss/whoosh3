@@ -8,6 +8,19 @@ All notable changes to this project are documented here. This project follows
 
 ### Added
 
+- First-class LlamaIndex integration, shipped as `whoosh.llamaindex` and
+  installed with `pip install "whoosh3[llamaindex]"`. Mirrors the LangChain
+  adapter: use Whoosh as a lexical (BM25) retriever to complement dense/vector
+  retrieval, which can quietly miss the exact literal tokens that matter most
+  (SKUs, error codes, gene symbols, ticket IDs). The dependency-free
+  `WhooshSearch` core is now shared across framework adapters in a new
+  `whoosh.retrieval` module (Whoosh + stdlib only, fully unit-tested), and a
+  thin `make_whoosh_llamaindex_retriever()` factory lazily builds a
+  `llama_index.core.retrievers.BaseRetriever` — so importing `whoosh.llamaindex`
+  never requires `llama-index-core`. Drop it into a `QueryFusionRetriever` for
+  hybrid (lexical + vector) search. Covered by `tests/test_llamaindex.py` and a
+  runnable `examples/llamaindex_retriever.py`. `whoosh.langchain` re-exports the
+  shared core, so `from whoosh.langchain import WhooshSearch, Hit` keeps working.
 - Cookbook recipe and runnable example (`examples/signed_numbers.py`) on
   indexing signed numbers. The stock word tokenizer treats `-`/`+` as
   boundaries, so a leading sign is silently dropped from numeric text and

@@ -38,6 +38,7 @@ classifiers = [
 dev = ["pytest>=7", "pytest-cov", "ruff", "pre-commit", "mypy"]
 mcp = ["mcp>=1.0"]
 langchain = ["langchain-core>=0.3"]
+llamaindex = ["llama-index-core>=0.10"]
 
 [project.scripts]
 whoosh = "whoosh.cli:main"

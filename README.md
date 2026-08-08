@@ -174,7 +174,10 @@ reference (all flags, exit codes, and how it maps onto the API):
   BM25 with any vector store via Reciprocal Rank Fusion, and a
   first-class [LangChain integration](src/whoosh/langchain.py)
   (`pip install "whoosh3[langchain]"`) that drops Whoosh into any LangChain
-  chain, `EnsembleRetriever`, or LangGraph agent as a `BaseRetriever`
+  chain, `EnsembleRetriever`, or LangGraph agent as a `BaseRetriever`, and a
+  matching [LlamaIndex integration](src/whoosh/llamaindex.py)
+  (`pip install "whoosh3[llamaindex]"`) that plugs Whoosh into any LlamaIndex
+  query engine or `QueryFusionRetriever` as a `BaseRetriever`
 - **Roadmap:** [ROADMAP.md](ROADMAP.md)
 - **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 

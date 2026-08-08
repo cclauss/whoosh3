@@ -418,6 +418,33 @@ Install the optional dependency with ``pip install "whoosh3[langchain]"``. A run
     python examples/langchain_retriever.py
 
 
+Use Whoosh as a LlamaIndex retriever
+====================================
+
+Building on LlamaIndex instead? The same BM25 core is wrapped as a LlamaIndex
+``BaseRetriever`` in the ``whoosh.llamaindex`` module, so you can plug Whoosh in
+wherever LlamaIndex expects a retriever — on its own, or inside a
+``QueryFusionRetriever`` for hybrid (lexical + vector) search. As with the
+LangChain adapter, the shared ``WhooshSearch`` core lives in
+``whoosh.retrieval`` and depends only on Whoosh + the standard library, and the
+LlamaIndex adapter is built lazily so importing ``whoosh.llamaindex`` never
+requires ``llama-index-core``::
+
+    from whoosh.llamaindex import WhooshSearch, make_whoosh_llamaindex_retriever
+
+    core = WhooshSearch.from_texts(
+        texts=["Whoosh is a pure-Python search library.", "BM25 ranks by term rarity."],
+        ids=["a", "b"],
+    )
+    retriever = make_whoosh_llamaindex_retriever(core, k=4)
+    nodes = retriever.retrieve("pure python search")   # -> list[NodeWithScore]
+
+Install the optional dependency with ``pip install "whoosh3[llamaindex]"``. A
+runnable demo lives in ``examples/llamaindex_retriever.py``::
+
+    python examples/llamaindex_retriever.py
+
+
 Migrating from Whoosh 2.x / whoosh-reloaded
 ===========================================
 
