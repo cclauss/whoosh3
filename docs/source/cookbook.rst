@@ -155,6 +155,41 @@ two sign-preserving options and one thing to avoid:
 See also :doc:`schema` and :doc:`analysis` for the full reference.
 
 
+Searching for acronyms and tech tokens (``R&D``, ``C++``, ``C#``, ``.NET``)
+===========================================================================
+
+``examples/acronyms.py`` — the stock analyzers tokenize with a word pattern
+that treats ``&``, ``+``, ``#`` and ``.`` as boundaries, so ``R&D`` splits into
+``R`` and ``D`` — and because :class:`~whoosh.analysis.StandardAnalyzer` also
+drops single characters, the acronym disappears entirely::
+
+    StandardAnalyzer()("Our R&D team ships C++ and C# on .NET")
+        ->  ['our', 'team', 'ships', 'net']   # R&D, C++, C# all gone
+
+So a user who searches for ``R&D`` (or ``C++``, ``C#``, ``AT&T``, ``.NET`` …)
+gets no results, even though the text is right there. The recipe ships a
+targeted ``TechAnalyzer`` that keeps those shapes whole:
+
+* ampersand acronyms — ``R&D``, ``AT&T``, ``Q&A``, ``P&L``
+* ``+``/``#`` language names — ``C++``, ``G++``, ``C#``, ``F#``
+* dotted platform names — ``.NET``, ``.NETCore``
+
+while ordinary text — including *hyphenated* words like ``well-known`` and
+``e-mail`` — keeps splitting exactly as before, because the tech shapes are
+tried *first* (most specific wins) and everything else falls through to the
+normal Whoosh word pattern::
+
+    RegexTokenizer(r"\w+(?:&\w+)+|[A-Za-z]\+\+|[A-Za-z]#|\.[A-Za-z][\w.]*|\w+(?:\.?\w+)*")
+
+Attach it with ``TEXT(analyzer=TechAnalyzer())`` and Whoosh runs the same
+pipeline at index and query time, so ``R&D`` matches ``R&D``. For fully
+arbitrary punctuation search, add an :class:`~whoosh.analysis.NgramFilter`
+field (see below); for exact literal matching of a whole field, use an
+:class:`~whoosh.fields.ID` field.
+
+See also :doc:`analysis` for the full analysis reference.
+
+
 Custom analyzers (build your own text pipeline)
 ===============================================
 

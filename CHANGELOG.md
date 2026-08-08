@@ -6,6 +6,23 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.36.0] - 2026-08-08
+
+### Added
+
+- Cookbook recipe and runnable example (`examples/acronyms.py`) on searching
+  for acronyms and tech tokens such as `R&D`, `AT&T`, `Q&A`, `C++`, `C#`, `F#`
+  and `.NET`. The stock analyzers tokenize on `&`/`+`/`#`/`.` boundaries, so
+  `R&D` splits into `R` and `D` and — because `StandardAnalyzer` also drops
+  single characters — the acronym disappears entirely, and a search for it
+  returns nothing even though the text is present. The recipe ships a targeted
+  `TechAnalyzer` (a `RegexTokenizer` whose pattern tries the tech shapes
+  most-specific-first, then falls through to the normal word pattern) that
+  keeps those tokens whole while leaving ordinary hyphenation like
+  `well-known`/`e-mail` unchanged. Covered by `tests/test_example_acronyms.py`,
+  including an end-to-end index+search check that `R&D`, `C++`, `C#` and `.NET`
+  all match. Addresses a recurring downstream papercut (e.g. dullage/flatnotes#276).
+
 ## [3.35.0] - 2026-08-08
 
 ### Added
