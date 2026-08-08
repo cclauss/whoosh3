@@ -6,6 +6,17 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Cookbook recipe and runnable example (`examples/signed_numbers.py`) on
+  indexing signed numbers. The stock word tokenizer treats `-`/`+` as
+  boundaries, so a leading sign is silently dropped from numeric text and
+  `-100`/`100` collapse to one term. The recipe documents two sign-preserving
+  approaches — a `NUMERIC(signed=True)` field (which also enables range
+  queries) and a targeted tokenizer that keeps signed numbers while leaving
+  hyphenated words intact — and explains why widening the whole word pattern
+  regresses ordinary hyphenation. Covered by `tests/test_example_signed_numbers.py`.
+
 ## [3.34.0] - 2026-08-08
 
 ### Added

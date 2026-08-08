@@ -127,6 +127,34 @@ and wraps each matched term in markup. The recipe covers:
 See also :doc:`highlight` for the full highlighting reference.
 
 
+Indexing signed numbers (keep the minus sign)
+=============================================
+
+``examples/signed_numbers.py`` — the stock analyzers tokenize with a word
+pattern that treats ``-`` and ``+`` as boundaries (a hyphen is normally an
+intra-word separator: "well-known", "e-mail"). A handy default for prose, but
+it silently strips a leading sign from numeric text, so ``-100`` and ``100``
+index to the *same* term::
+
+    RegexTokenizer()("balance -100 usd")  ->  ['balance', '100', 'usd']
+
+When the sign matters (prices, deltas, temperatures, offsets), the recipe shows
+two sign-preserving options and one thing to avoid:
+
+* **Use a** :class:`~whoosh.fields.NUMERIC` **field** for values you actually
+  compare — it keeps the sign *and* gives you range queries
+  (``bal:[-200 to 0]``). This is the intended tool for numbers.
+* **Scope the sign to numbers only** in a custom tokenizer,
+  ``RegexTokenizer(r"[+-]?\d+(\.\d+)?|\w+(\.?\w+)*")``, so signed numbers
+  survive while ordinary hyphenated words keep splitting as before.
+* **Don't** widen the whole word pattern to ``[+-]?\w+(\.?\w+)*`` — that fixes
+  numbers but glues a stray hyphen onto every token after a split
+  ("well-known" -> ``['well', '-known']``). For real dates, reach for a
+  :class:`~whoosh.fields.DATETIME` field instead (see :doc:`dates`).
+
+See also :doc:`schema` and :doc:`analysis` for the full reference.
+
+
 Custom analyzers (build your own text pipeline)
 ===============================================
 

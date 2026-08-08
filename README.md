@@ -162,6 +162,7 @@ reference (all flags, exit codes, and how it maps onto the API):
   [faceted-navigation / filter-sidebar recipe](examples/faceted_search.py), a
   [highlighting / search-snippets recipe](examples/highlighting.py), and a
   [custom-analyzers recipe](examples/custom_analyzers.py), a
+  [signed-number indexing recipe](examples/signed_numbers.py), a
   [custom scoring & sorting recipe](examples/scoring_and_sorting.py), and a
   [FastAPI search API](examples/fastapi_app.py) with upsert/delete/search
   endpoints, the same API built on [Flask](examples/flask_app.py) and on
