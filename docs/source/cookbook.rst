@@ -369,6 +369,27 @@ The module docstring in ``examples/rag_retriever.py`` demonstrates the complete 
     python examples/rag_retriever.py
 
 
+Use Whoosh as a LangChain retriever
+====================================
+
+``examples/langchain_retriever.py`` — if your stack is built on LangChain, you can drop Whoosh in as a lexical (BM25) retriever wherever LangChain expects a ``BaseRetriever``: on its own, inside an ``EnsembleRetriever`` for hybrid search, or as a tool in a LangGraph agent. This is the classic complement to a vector store, catching the exact tokens (SKUs, error codes, function names) that dense embeddings quietly miss.
+
+The example keeps all the search logic in a small, dependency-free ``WhooshSearch`` core (only Whoosh + the standard library) and exposes a thin ``make_whoosh_retriever()`` factory that builds the LangChain adapter lazily, so importing the module never requires ``langchain-core``::
+
+    from examples.langchain_retriever import WhooshSearch, make_whoosh_retriever
+
+    core = WhooshSearch.from_texts(
+        texts=["Whoosh is a pure-Python search library.", "BM25 ranks by term rarity."],
+        ids=["a", "b"],
+    )
+    retriever = make_whoosh_retriever(core, k=4)
+    docs = retriever.invoke("pure python search")   # -> list[Document]
+
+Install the optional dependency with ``pip install langchain-core`` and run the demo with::
+
+    python examples/langchain_retriever.py
+
+
 Migrating from Whoosh 2.x / whoosh-reloaded
 ===========================================
 

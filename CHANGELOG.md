@@ -6,6 +6,18 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- New example `examples/langchain_retriever.py`: use Whoosh as a lexical (BM25)
+  retriever in LangChain. All search logic lives in a dependency-free
+  `WhooshSearch` core (Whoosh + stdlib only), with a thin
+  `make_whoosh_retriever()` factory that builds a `langchain_core`
+  `BaseRetriever` lazily — so importing the module never requires
+  `langchain-core`, and the adapter drops into any chain, `EnsembleRetriever`
+  (hybrid search), or LangGraph agent. Covered by
+  `tests/test_example_langchain_retriever.py` (the adapter test skips cleanly
+  when `langchain-core` is absent). Documented in the cookbook.
+
 ## [3.33.1] - 2026-08-04
 
 ### Fixed
