@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.34.0] - 2026-08-08
+
 ### Added
 
 - First-class LangChain integration, shipped as `whoosh.langchain` and installed
