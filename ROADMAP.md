@@ -81,6 +81,36 @@ About section of the README.)*
       `whoosh.analysis.intraword` (gh#82) remains open. Types are correct-only,
       never fabricated, and guarded by the `mypy` smoke job.
 
+## Done (3.34.0–3.36.0 — released 2026-08-08)
+
+- [x] **First-class LangChain retriever (3.34.0).** `whoosh.langchain` ships a
+      `WhooshSearch` store and a `make_whoosh_retriever(...)` helper so Whoosh
+      can be the retrieval half of a RAG pipeline — lexical BM25F search with
+      **no vector database and no API key**, pure Python. The module imports
+      cleanly whether or not `langchain-core` is installed (it degrades to a
+      clear error only when you actually build a retriever), so it never breaks
+      a plain `import whoosh`. Covered by `tests/test_langchain.py` and written
+      up in the [local-RAG guide](https://dev.to/priyasundaram/a-local-rag-retriever-in-pure-python-no-vector-db-no-api-key-with-whoosh-2k92).
+- [x] **First-class LlamaIndex retriever (3.35.0).** `whoosh.llamaindex`
+      exposes a `BaseRetriever` implementation usable on its own or inside a
+      LlamaIndex `QueryFusionRetriever` for hybrid lexical+vector setups. Same
+      contract as the LangChain module: imports without `llama-index-core`
+      present and fails only at construction with an actionable message.
+      Covered by `tests/test_llamaindex.py`, with a
+      [retriever landing page](https://priya-sundaram-dev.github.io/whoosh/demo/whoosh-llamaindex-retriever.html).
+      These two integrations make Whoosh a drop-in keyword retriever for the
+      RAG ecosystem while keeping the core dependency-free — heavy framework
+      code stays optional, per the guiding principles.
+- [x] **Acronyms and tech tokens are searchable (3.36.0).** The default
+      `StandardAnalyzer` splits and drops tokens like `R&D`, `C++`, `C#`,
+      `.NET`, and `AT&T`, so notes containing them were unfindable — a papercut
+      reported repeatedly downstream (e.g. flatnotes#276). Whoosh now ships a
+      `TechAnalyzer()` (a scoped `RegexTokenizer` that preserves these shapes
+      most-specific-first, leaving ordinary hyphenation untouched), a runnable
+      [`examples/acronyms.py`](examples/acronyms.py), a cookbook recipe, and
+      end-to-end regression tests (`tests/test_example_acronyms.py`) that
+      contrast it against the default analyzer.
+
 ## Now (next patch/minor)
 
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
