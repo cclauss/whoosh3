@@ -57,6 +57,30 @@ About section of the README.)*
       layers. A `mypy` smoke job and `tests/typing_smoke.py` guard the surface
       against regressions. Types are correct-only, never fabricated.
 
+## Done (3.32.0–3.33.1 — released 2026-07-31 … 2026-08-04)
+
+- [x] **MCP server, first-class and installable (3.32.0).** The
+      [Model Context Protocol](https://modelcontextprotocol.io/) integration
+      graduated from an example to a supported module — `whoosh.mcp`, a
+      `whoosh-mcp` console script, and a `whoosh3[mcp]` optional dependency —
+      so you can serve a folder of your own docs to an AI agent as `search` and
+      `fetch` tools with `pip install "whoosh3[mcp]"` and `whoosh-mcp ~/notes`,
+      pure Python, no server, no native deps. The `SearchCore` class has no MCP
+      dependency, so it's reusable behind any agent framework and unit-testable
+      on its own. A [Docker image](https://priya-sundaram-dev.github.io/whoosh/docs/mcp.html)
+      (3.33.0) lets it run without a local Python environment, and the server
+      now fails with a single actionable line — not a traceback — when the
+      optional `mcp` SDK is missing (3.33.1). Covered by `tests/test_mcp.py`.
+- [x] **`whoosh.analysis` typing sweep essentially complete (through 3.33.0).**
+      The coordinated, module-at-a-time effort — mostly driven by first-time
+      contributors — has landed for `tokenizers` (gh#72, by
+      [@mani787060](https://github.com/mani787060)), `filters` (gh#76, by
+      [@CrucialVansh](https://github.com/CrucialVansh)), `morph` (gh#77, by
+      [@mani787060](https://github.com/mani787060)), `acore` (gh#80), `ngrams`,
+      and `analyzers` (gh#87, by [@Kiet-B](https://github.com/Kiet-B)). Only
+      `whoosh.analysis.intraword` (gh#82) remains open. Types are correct-only,
+      never fabricated, and guarded by the `mypy` smoke job.
+
 ## Now (next patch/minor)
 
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
@@ -65,18 +89,14 @@ About section of the README.)*
       classifier. Whoosh now supports 3.9–3.14.
 - [ ] Triage the inherited issue backlog; label, reproduce, close stale. Two
       long-standing bugs already fixed (gh#99, gh#116); more to review.
-- [ ] **Type hints across the `whoosh.analysis` package** — a coordinated,
-      module-at-a-time sweep, mostly driven by first-time contributors.
-      `whoosh.analysis.tokenizers` (gh#72, by
-      [@mani787060](https://github.com/mani787060)) and
-      `whoosh.analysis.filters` (gh#76, by
-      [@CrucialVansh](https://github.com/CrucialVansh)) are annotated and
-      merged; `whoosh.analysis.morph` (gh#77) and `whoosh.analysis.acore`
-      (gh#80) are open as
-      [good-first-issues](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22)
-      — pick one up and it will ship in the next `whoosh.analysis` typing
-      release. Types are correct-only, never fabricated, and guarded by the
-      `mypy` smoke job.
+- [ ] **Finish the public-API typing sweep — help wanted.** Two well-scoped,
+      self-contained modules are open as
+      [good-first-issues](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
+      `whoosh.analysis.intraword` (gh#82 — `CompoundWordFilter`, `BiWordFilter`,
+      `ShingleFilter`, `IntraWordFilter`) and `whoosh.idsets` (gh#86 —
+      `DocIdSet`, `BitSet`, `SortedIntSet` and friends). Pick one up and it
+      will ship in the next typing release. Types are correct-only, never
+      fabricated, and guarded by the `mypy` smoke job.
 - [x] `py.typed` marker + `Typing :: Typed` classifier shipped in **3.1.0**;
       the most-used public API is now annotated end-to-end (gh#3): `index`
       entry points (`create_in`, `open_dir`, `exists_in`, `exists`), the
