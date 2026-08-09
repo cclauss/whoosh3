@@ -27,15 +27,16 @@
 
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import TYPE_CHECKING, Iterator
 
 if TYPE_CHECKING:
     from whoosh.analysis.tokenizers import Token
-    
+
 from whoosh.analysis.filters import Filter
 from whoosh.lang.dmetaphone import double_metaphone
 from whoosh.lang.porter import stem
-from whoosh.util.cache import lfu_cache, unbound_cache
+from whoosh.util.cache import unbound_cache
 
 
 class StemFilter(Filter):
@@ -130,12 +131,21 @@ class StemFilter(Filter):
             if self.cachesize < 0:
                 self._stem = unbound_cache(stemfn)
             elif self.cachesize > 1:
-                self._stem = lfu_cache(self.cachesize)(stemfn)
+                # functools.lru_cache is a C-accelerated cache; it is several
+                # times faster on the hot (cache-hit) path than the old
+                # pure-Python LFU cache. Stemming a token stream is dominated
+                # by repeated words, so this is where StemFilter spends its
+                # time. The eviction policy (LRU vs LFU) does not affect
+                # correctness -- the stem function is pure -- only which
+                # entries survive when the cache is full.
+                self._stem = lru_cache(maxsize=self.cachesize)(stemfn)
         else:
             self._stem = stemfn
 
     def cache_info(self):
-        if self.cachesize <= 1:
+        # No stats are available when caching is disabled (cachesize is None
+        # or a small/zero int that falls back to the bare stem function).
+        if not isinstance(self.cachesize, int) or self.cachesize <= 1:
             return None
         return self._stem.cache_info()
 

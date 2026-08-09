@@ -804,3 +804,47 @@ def test_cjk_analyzer_search():
         assert paths('"日本語を勉強"') == ["jp"]
         # No false positives for a term that isn't present.
         assert paths("存在しない") == []
+
+
+def test_stemfilter_cache_lru_backed():
+    from whoosh.analysis.morph import StemFilter
+
+    # Bounded cache path (cachesize > 1) is now backed by functools.lru_cache.
+    sf = StemFilter(cachesize=1000)
+    info0 = sf.cache_info()
+    assert info0.hits == 0 and info0.misses == 0
+
+    # Stemming is still correct and stable across repeats.
+    def stems(text):
+        return [t.text for t in sf(analysis.RegexTokenizer()(text))]
+
+    assert stems("running runner runs") == ["runn", "runner", "run"]
+    assert stems("running runner runs") == ["runn", "runner", "run"]
+
+    info = sf.cache_info()
+    # CacheInfo is the standard functools 4-tuple and hits accrue on repeats.
+    assert (info.hits, info.misses, info.maxsize, info.currsize) == tuple(info)
+    assert info.maxsize == 1000
+    assert info.hits >= 3
+
+    # Survives pickling (the dynamic cache is rebuilt on unpickle).
+    from pickle import dumps, loads
+
+    sf2 = loads(dumps(sf))
+    assert [t.text for t in sf2(analysis.RegexTokenizer()("running"))] == ["runn"]
+
+
+def test_stemfilter_cache_disabled_and_unbounded():
+    from whoosh.analysis.morph import StemFilter
+
+    # cachesize=None disables caching; cache_info() reports None.
+    off = StemFilter(cachesize=None)
+    assert off.cache_info() is None
+    assert [t.text for t in off(analysis.RegexTokenizer()("running"))] == ["runn"]
+
+    # cachesize=-1 is the unbounded cache; still correct.
+    unbounded = StemFilter(cachesize=-1)
+    assert [t.text for t in unbounded(analysis.RegexTokenizer()("running runs"))] == [
+        "runn",
+        "run",
+    ]

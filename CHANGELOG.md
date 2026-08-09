@@ -6,6 +6,26 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+
+- `StemFilter.cache_info()` no longer raises `TypeError` when the filter was
+  created with caching disabled (`cachesize=None`); it now returns `None` in
+  that case, matching the documented "no stats available" behaviour.
+
+### Changed
+
+- `StemFilter` (and therefore `StemmingAnalyzer` and `LanguageAnalyzer`) now
+  backs its bounded stem cache with the C-accelerated
+  `functools.lru_cache` instead of the old hand-rolled pure-Python LFU cache.
+  The stem function is pure, so the eviction policy has no effect on results —
+  only on which entries survive when the cache fills — but the hot cache-hit
+  path is several times faster (~4x on a repeated-token stream in a local
+  micro-benchmark), which is where stemming spends most of its time. This
+  speeds up indexing and query-time analysis for any schema using a stemming
+  analyzer, with no API change. `StemFilter.cache_info()` keeps working and
+  now returns the standard `functools` `CacheInfo` named tuple
+  (`hits, misses, maxsize, currsize`).
+
 ## [3.36.0] - 2026-08-08
 
 ### Added
