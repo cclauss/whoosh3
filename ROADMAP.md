@@ -193,16 +193,36 @@ About section of the README.)*
       build (`StandardAnalyzer`, positions on) shows analysis is only ~10% of
       wall time; the other ~90% is the postings write pipeline. The largest
       addressable costs there, in order:
-    - **Positions encoding via `pickle`.** `whoosh.formats.Positions.encode`
-      serialises each term's position-delta list with `dumps(deltas, 2)`
-      (~580k calls in the sample). Pickle is both slow and space-inefficient
-      for short lists of small ints; a varint/group-varint delta codec would
-      be markedly faster and produce smaller postings. This changes the
-      on-disk value format, so it **must** be gated behind a codec bump
-      (posting lists already carry a codec magic header, and codecs are
-      pluggable classes) with the current reader kept for existing indexes —
-      no silent breakage. This is the single highest-impact,
-      well-scoped performance task and a great contribution target.
+    - **Positions encoding via `pickle` — investigated, not worth it in pure
+      Python (2026-08-09).** `whoosh.formats.Positions.encode` serialises each
+      term's position-delta list with `dumps(deltas, 2)` (~520k calls in a
+      5,000-doc `StandardAnalyzer` build), so it looked like the obvious next
+      target: a varint/group-varint delta codec should be smaller and faster.
+      A prototype (zig-zag varints on the shared `whoosh.util.varints`
+      primitives, self-describing so legacy pickle postings keep decoding with
+      no migration — verified with a fuzz round-trip and a legacy-index
+      end-to-end read) was built and measured against the previous release
+      before any release, exactly as this section requires. The result was a
+      **net non-improvement**, for two reasons that are easy to miss on paper:
+        1. **CPython's `pickle` is a C extension; our varint codec is pure
+           Python.** For these short lists of small ints, C-`pickle` *encodes*
+           the delta list faster than a per-int Python varint loop can, and
+           decodes it faster too. Measured on the positions-heavy build,
+           indexing went from ~4.36s to ~4.46s (a ~2% *regression*), not a
+           speedup.
+        2. **Block-level `zlib` already captures most of the space win.**
+           Postings blocks are `zlib`-compressed on disk, so the ~50% shrink of
+           the *raw* per-term payload collapses to only **~2.5%** off the total
+           optimized index (7.30 MB → 7.12 MB in the same build).
+      A pure-Python re-encoding of a value that C-`pickle` already handles well,
+      guarded forever by a format branch, is not a good trade for ~2.5% on disk
+      and a small speed cost. The realistic path to a genuine win here would be
+      an *optional* C/Rust accelerator (see the accelerators item below) or
+      tunable block compression — not a pure-Python format change. Leaving this
+      documented so it isn't re-attempted. The profiling above still stands: the
+      postings-write pipeline dominates build time, so future throughput work
+      should target the pipeline (batching, fewer allocations, the length-lookup
+      hoist already shipped) rather than the value codec.
     - **Per-posting field-length lookups.** *(Done — Unreleased.)*
       `FieldWriter.add_postings` used to call `doc_field_length(docnum,
       fieldname)` once per posting, rebuilding the `_lenfield` string and
