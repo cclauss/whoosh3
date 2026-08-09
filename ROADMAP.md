@@ -119,14 +119,20 @@ About section of the README.)*
       classifier. Whoosh now supports 3.9–3.14.
 - [ ] Triage the inherited issue backlog; label, reproduce, close stale. Two
       long-standing bugs already fixed (gh#99, gh#116); more to review.
-- [ ] **Finish the public-API typing sweep — help wanted.** Two well-scoped,
-      self-contained modules are open as
-      [good-first-issues](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
+- [ ] **Finish the public-API typing sweep — help wanted.** One well-scoped,
+      self-contained module is open as a
+      [good-first-issue](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
       `whoosh.analysis.intraword` (gh#82 — `CompoundWordFilter`, `BiWordFilter`,
-      `ShingleFilter`, `IntraWordFilter`) and `whoosh.idsets` (gh#86 —
-      `DocIdSet`, `BitSet`, `SortedIntSet` and friends). Pick one up and it
-      will ship in the next typing release. Types are correct-only, never
-      fabricated, and guarded by the `mypy` smoke job.
+      `ShingleFilter`, `IntraWordFilter`). Pick it up and it will ship in the
+      next typing release. Types are correct-only, never fabricated, and
+      guarded by the `mypy` smoke job.
+- [x] **`whoosh.idsets` fully type-annotated (gh#86, shipped 3.38.0).** The
+      whole doc-id set surface (`DocIdSet`, `BitSet`, `OnDiskBitSet`,
+      `SortedIntSet`, `ReverseIdSet`, `RoaringIdSet`, `MultiIdSet`) is typed
+      end-to-end and clean under both `mypy` and `ruff`. Annotating it surfaced
+      and fixed two real bugs (`RoaringIdSet` `OverflowError` for ids ≥ 65536;
+      `OnDiskBitSet.__repr__` `AttributeError`), each now covered by a
+      regression test.
 - [x] `py.typed` marker + `Typing :: Typed` classifier shipped in **3.1.0**;
       the most-used public API is now annotated end-to-end (gh#3): `index`
       entry points (`create_in`, `open_dir`, `exists_in`, `exists`), the
