@@ -116,6 +116,13 @@ class Token:
     boost: float
     removestops: bool
     mode: str
+    # Optional positional attributes populated dynamically by tokenizers when
+    # ``positions``/``chars`` are enabled (see the ``__init__`` docstring). They
+    # are declared here so type checkers know their types where consumers guard
+    # access behind ``token.positions``/``token.chars``.
+    pos: int
+    startchar: int
+    endchar: int
 
     def __init__(
         self,

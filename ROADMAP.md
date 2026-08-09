@@ -77,9 +77,10 @@ About section of the README.)*
       [@mani787060](https://github.com/mani787060)), `filters` (gh#76, by
       [@CrucialVansh](https://github.com/CrucialVansh)), `morph` (gh#77, by
       [@mani787060](https://github.com/mani787060)), `acore` (gh#80), `ngrams`,
-      and `analyzers` (gh#87, by [@Kiet-B](https://github.com/Kiet-B)). Only
-      `whoosh.analysis.intraword` (gh#82) remains open. Types are correct-only,
-      never fabricated, and guarded by the `mypy` smoke job.
+      `analyzers` (gh#87, by [@Kiet-B](https://github.com/Kiet-B)), and finally
+      `intraword` (gh#82). The sweep is now complete across `whoosh.analysis`.
+      Types are correct-only, never fabricated, and guarded by the `mypy` smoke
+      job plus `tests/typing_smoke.py`.
 
 ## Done (3.34.0–3.36.0 — released 2026-08-08)
 
@@ -119,13 +120,14 @@ About section of the README.)*
       classifier. Whoosh now supports 3.9–3.14.
 - [ ] Triage the inherited issue backlog; label, reproduce, close stale. Two
       long-standing bugs already fixed (gh#99, gh#116); more to review.
-- [ ] **Finish the public-API typing sweep — help wanted.** One well-scoped,
-      self-contained module is open as a
-      [good-first-issue](https://github.com/priya-sundaram-dev/whoosh/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22):
-      `whoosh.analysis.intraword` (gh#82 — `CompoundWordFilter`, `BiWordFilter`,
-      `ShingleFilter`, `IntraWordFilter`). Pick it up and it will ship in the
-      next typing release. Types are correct-only, never fabricated, and
-      guarded by the `mypy` smoke job.
+- [x] **`whoosh.analysis` typing sweep complete (gh#82, in `[Unreleased]`).**
+      The last self-contained analysis module, `whoosh.analysis.intraword`
+      (`CompoundWordFilter`, `BiWordFilter`, `ShingleFilter`,
+      `IntraWordFilter`), is now typed end-to-end and clean under both `mypy`
+      and `ruff`. `Token`'s optional positional attributes (`pos`, `startchar`,
+      `endchar`) are now declared on the class, and the four filters are
+      exercised in `tests/typing_smoke.py` so the public typing stays
+      CI-guarded.
 - [x] **`whoosh.idsets` fully type-annotated (gh#86, shipped 3.38.0).** The
       whole doc-id set surface (`DocIdSet`, `BitSet`, `OnDiskBitSet`,
       `SortedIntSet`, `ReverseIdSet`, `RoaringIdSet`, `MultiIdSet`) is typed

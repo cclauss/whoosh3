@@ -547,6 +547,30 @@ def run() -> list[str]:
     dmeta_tokens: Iterator[Token] = dmeta_filter(tokenizer("Smith Smyth"))
     assert all(isinstance(tok, Token) for tok in dmeta_tokens)
 
+    # whoosh.analysis.intraword public API (gh#82): the sub-word splitting and
+    # phrase-shingling filters used for CamelCase/Wi-Fi/SD500 handling and
+    # pseudo-phrase fields. Their annotated __call__ takes an Iterable[Token]
+    # and returns an Iterator[Token], so the filter chain type-checks.
+    from whoosh.analysis.intraword import (
+        BiWordFilter,
+        CompoundWordFilter,
+        IntraWordFilter,
+        ShingleFilter,
+    )
+
+    iwf = IntraWordFilter(mergewords=True, mergenums=True)
+    iwf_tokens: Iterator[Token] = iwf(tokenizer("PowerShot SD500 Wi-Fi"))
+    assert all(isinstance(tok, Token) for tok in iwf_tokens)
+    biword = BiWordFilter(sep="-")
+    biword_tokens: Iterator[Token] = biword(tokenizer("the sign of four"))
+    assert all(isinstance(tok, Token) for tok in biword_tokens)
+    shingle = ShingleFilter(size=2, sep=" ")
+    shingle_tokens: Iterator[Token] = shingle(tokenizer("a witty fool"))
+    assert all(isinstance(tok, Token) for tok in shingle_tokens)
+    cwf = CompoundWordFilter({"green", "eggs"}, keep_compound=True)
+    cwf_tokens: Iterator[Token] = cwf(tokenizer("greeneggs"))
+    assert all(isinstance(tok, Token) for tok in cwf_tokens)
+
     # whoosh.analysis.analyzers public API (gh#85): analyzer factories return
     # an Analyzer, and calling one with text yields an Iterator[Token].
     standard_analyzer = StandardAnalyzer()

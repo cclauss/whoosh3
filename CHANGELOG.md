@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Full type annotations for `whoosh.analysis.intraword` — the sub-word
+  analysis filters (`CompoundWordFilter`, `BiWordFilter`, `ShingleFilter`,
+  `IntraWordFilter`) are now typed end-to-end, so editors and `mypy`/`pyright`
+  get accurate signatures for the CamelCase/`Wi-Fi`/`SD500` splitting and
+  pseudo-phrase shingling used in custom analyzer chains. `Token`'s optional
+  positional attributes (`pos`, `startchar`, `endchar`) are now declared on
+  the class so consumers that guard access behind `token.positions` /
+  `token.chars` type-check cleanly. The module is clean under both `mypy` and
+  `ruff`, and the four filters are exercised in `tests/typing_smoke.py` so the
+  public typing stays CI-guarded (closes gh#82; completes the
+  `whoosh.analysis` typing sweep tracked in gh#3).
+
 ## [3.38.0] - 2026-08-09
 
 ### Added
