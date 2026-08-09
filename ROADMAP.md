@@ -187,6 +187,32 @@ About section of the README.)*
 
 ## Later / exploring
 
+- [ ] **Indexing throughput (profiled, contributor-ready).** Whoosh's honest
+      weakness vs. SQLite FTS5 is index-build speed, so it's worth being
+      precise about *where* the time goes. Profiling a 5,000-doc / ~600k-token
+      build (`StandardAnalyzer`, positions on) shows analysis is only ~10% of
+      wall time; the other ~90% is the postings write pipeline. The largest
+      addressable costs there, in order:
+    - **Positions encoding via `pickle`.** `whoosh.formats.Positions.encode`
+      serialises each term's position-delta list with `dumps(deltas, 2)`
+      (~580k calls in the sample). Pickle is both slow and space-inefficient
+      for short lists of small ints; a varint/group-varint delta codec would
+      be markedly faster and produce smaller postings. This changes the
+      on-disk value format, so it **must** be gated behind a codec bump
+      (posting lists already carry a codec magic header, and codecs are
+      pluggable classes) with the current reader kept for existing indexes —
+      no silent breakage. This is the single highest-impact,
+      well-scoped performance task and a great contribution target.
+    - **Per-posting field-length lookups.** `FieldWriter.add_postings` calls
+      `doc_field_length(docnum, fieldname)` once per posting; the per-call
+      `_lenfield` string build + reader dict lookup are pure overhead that can
+      be hoisted per field-run. Small but safe (no format change).
+    - **Block compression (`zlib.compress`).** Inherent to the format; could be
+      made tunable (compression level / codec choice) behind an option rather
+      than removed.
+    Any change here ships only with the benchmark suite
+    ([`benchmark/regression.py`](benchmark/regression.py)) showing a real,
+    reproducible gain and green cross-version CI.
 - [ ] Optional accelerators behind extras, without breaking pure-Python
       install.
 - [x] Better Unicode/tokenizer coverage and documented analyzer recipes. The
