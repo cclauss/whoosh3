@@ -6,6 +6,22 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.39.0] - 2026-08-09
+
+### Changed
+
+- Faster index writing: `FieldWriter.add_postings` no longer rebuilds the
+  internal length-field name and re-resolves the length column reader on every
+  posting. It now binds a per-field length accessor once when the field
+  changes (via the new `PerDocumentReader.doc_field_length_reader`, with a fast
+  override in the default `whoosh3` codec) and calls it once per posting. This
+  hoists ~600k redundant string builds and reader look-ups out of the hot loop
+  in a 5,000-doc build, trimming a few percent off wall-clock index build time
+  with byte-identical output and no on-disk format change. Third-party length
+  providers that only implement `doc_field_length` keep working unchanged via a
+  transparent fallback. This is the first, format-safe step of the profiled
+  indexing-throughput work tracked in the roadmap.
+
 ### Added
 
 - Full type annotations for `whoosh.analysis.intraword` — the sub-word

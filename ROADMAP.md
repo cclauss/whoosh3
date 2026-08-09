@@ -203,10 +203,14 @@ About section of the README.)*
       pluggable classes) with the current reader kept for existing indexes —
       no silent breakage. This is the single highest-impact,
       well-scoped performance task and a great contribution target.
-    - **Per-posting field-length lookups.** `FieldWriter.add_postings` calls
-      `doc_field_length(docnum, fieldname)` once per posting; the per-call
-      `_lenfield` string build + reader dict lookup are pure overhead that can
-      be hoisted per field-run. Small but safe (no format change).
+    - **Per-posting field-length lookups.** *(Done — Unreleased.)*
+      `FieldWriter.add_postings` used to call `doc_field_length(docnum,
+      fieldname)` once per posting, rebuilding the `_lenfield` string and
+      re-resolving the length column reader each time. It now binds a per-field
+      length accessor once when the field changes
+      (`PerDocumentReader.doc_field_length_reader`, with a fast `whoosh3`
+      override) and calls it once per posting — byte-identical output, no
+      format change, a few percent off build wall-time.
     - **Block compression (`zlib.compress`).** Inherent to the format; could be
       made tunable (compression level / codec choice) behind an option rather
       than removed.

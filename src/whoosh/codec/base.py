@@ -177,10 +177,23 @@ class FieldWriter:
         finish_term = self.finish_term
         finish_field = self.finish_field
 
+        # ``lengths`` is duck-typed: it may be a full PerDocumentReader (which
+        # provides the fast per-field accessor ``doc_field_length_reader``) or
+        # any object exposing only ``doc_field_length``. Prefer the fast path
+        # when available and fall back to a thin per-field closure otherwise,
+        # so third-party length providers keep working unchanged.
         if lengths:
-            dfl = lengths.doc_field_length
+            get_dfl_reader = getattr(lengths, "doc_field_length_reader", None)
+            if get_dfl_reader is None:
+                plain_dfl = lengths.doc_field_length
+                get_dfl_reader = lambda fieldname: (
+                    lambda docnum, _fn=fieldname: plain_dfl(docnum, _fn)
+                )
         else:
-            dfl = lambda docnum, fieldname: 0
+            get_dfl_reader = None
+        # Per-field bound length accessor, (re)bound whenever the field
+        # changes below so the per-posting call avoids per-field work.
+        field_dfl = None
 
         # The fieldname of the previous posting
         lastfn = None
@@ -211,6 +224,10 @@ class FieldWriter:
                 start_field(fieldname, fieldobj)
                 lastfn = fieldname
                 lasttext = None
+                if get_dfl_reader is not None:
+                    field_dfl = get_dfl_reader(fieldname)
+                else:
+                    field_dfl = lambda docnum: 0
 
             # HACK: items where docnum == -1 indicate words that should be added
             # to the spelling graph, not the postings
@@ -233,7 +250,7 @@ class FieldWriter:
                 lasttext = btext
 
             # Add this posting
-            length = dfl(docnum, fieldname)
+            length = field_dfl(docnum)
             if value is None:
                 value = emptybytes
             add(docnum, weight, value, length)
@@ -460,6 +477,20 @@ class PerDocumentReader:
     @abstractmethod
     def doc_field_length(self, docnum, fieldname, default=0):
         raise NotImplementedError
+
+    def doc_field_length_reader(self, fieldname, default=0):
+        # Return a per-field callable ``get(docnum)`` equivalent to
+        # ``doc_field_length(docnum, fieldname, default)``. Hot write paths
+        # (see ``FieldWriter.add_postings``) call this once per field-run and
+        # then invoke the returned function once per posting, so codecs can
+        # hoist the per-field work (column-reader resolution, field-name
+        # munging) out of the per-posting loop. The default implementation is
+        # a thin closure and stays behaviourally identical to
+        # ``doc_field_length``; codecs may override it for speed.
+        def get(docnum, _fieldname=fieldname, _default=default):
+            return self.doc_field_length(docnum, _fieldname, _default)
+
+        return get
 
     @abstractmethod
     def field_length(self, fieldname):

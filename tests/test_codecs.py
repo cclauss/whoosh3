@@ -223,6 +223,36 @@ def test_docwriter_two():
     assert pdr.stored_fields(1) == {"title": "The second document", "text": 500}
 
 
+def test_doc_field_length_reader_matches():
+    # The fast per-field length accessor used by FieldWriter.add_postings must
+    # return byte-identical results to doc_field_length for every doc/field,
+    # including the "column absent" default path.
+    field = fields.TEXT()
+    st, codec, seg = _make_codec()
+    dw = codec.per_document_writer(st, seg)
+    dw.start_doc(0)
+    dw.add_field("title", field, ("a", "b"), 2)
+    dw.add_field("text", field, None, 4)
+    dw.finish_doc()
+    dw.start_doc(1)
+    dw.add_field("title", field, "x", 3)
+    dw.add_field("text", field, None, 1)
+    dw.finish_doc()
+    dw.close()
+    seg.set_doc_count(2)
+
+    pdr = codec.per_document_reader(st, seg)
+    for fieldname in ("title", "text"):
+        get = pdr.doc_field_length_reader(fieldname)
+        for docnum in (0, 1):
+            assert get(docnum) == pdr.doc_field_length(docnum, fieldname)
+
+    # A field with no length column returns the accessor's default, matching
+    # doc_field_length's default behaviour.
+    missing = pdr.doc_field_length_reader("nosuchfield", default=7)
+    assert missing(0) == pdr.doc_field_length(0, "nosuchfield", 7) == 7
+
+
 def test_vector():
     field = fields.TEXT(vector=True)
     st, codec, seg = _make_codec()

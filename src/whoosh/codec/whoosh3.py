@@ -452,6 +452,29 @@ class W3PerDocReader(base.PerDocumentReader):
         if lbyte:
             return byte_to_length(lbyte)
 
+    def doc_field_length_reader(self, fieldname, default=0):
+        # Fast per-field length accessor for hot write paths: resolve the
+        # length column reader for this field once, then the returned closure
+        # only does a column lookup + byte decode per posting. This hoists the
+        # ``_lenfield`` string build and cached-reader dispatch out of the
+        # per-posting loop in ``FieldWriter.add_postings``. Behaviour matches
+        # ``doc_field_length`` exactly (same default when the column or byte
+        # is absent).
+        lenfield = _lenfield(fieldname)
+        reader = self._cached_reader(lenfield, LENGTHS_COLUMN)
+        if reader is None:
+            return lambda docnum, _default=default: _default
+
+        def get(docnum, _reader=reader):
+            lbyte = _reader[docnum]
+            if lbyte:
+                return byte_to_length(lbyte)
+            # Match doc_field_length(): when the stored length byte is absent
+            # for a present column, it falls through to an implicit None.
+            return None
+
+        return get
+
     def field_length(self, fieldname):
         return self._segment._fieldlengths.get(fieldname, 0)
 
