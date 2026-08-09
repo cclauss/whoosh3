@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.37.0] - 2026-08-09
+
 ### Fixed
 
 - `StemFilter.cache_info()` no longer raises `TypeError` when the filter was
