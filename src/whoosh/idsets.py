@@ -2,12 +2,22 @@
 An implementation of an object that acts like a collection of on/off bits.
 """
 
+from __future__ import annotations
+
 import operator
 from array import array
 from bisect import bisect_left, bisect_right
+from collections.abc import Collection, Iterable, Iterator
 from itertools import zip_longest
+from typing import Any, Callable, Union
 
 from whoosh.util.numeric import bytes_for_bits
+
+# Anything that can stand in for "another set of doc ids" in the combining and
+# comparison methods below: either a :class:`DocIdSet`, or any built-in
+# collection of ints (``set``, ``list``, ``tuple``, ``frozenset``) that supports
+# both iteration and membership testing.
+IntSetLike = Union["DocIdSet", Collection[int]]
 
 # Number of '1' bits in each byte (0-255)
 _1SPERBYTE = array(
@@ -283,57 +293,60 @@ class DocIdSet:
     than ``set`` for most operations since they're pure Python.
     """
 
-    def __eq__(self, other):
-        for a, b in zip(self, other):
+    def __eq__(self, other: object) -> bool:
+        # Equality is defined element-wise against any iterable of ints; the
+        # ``# type: ignore`` covers the intentionally broad ``object`` param
+        # required to override ``object.__eq__``.
+        for a, b in zip(self, other):  # type: ignore[call-overload]
             if a != b:
                 return False
         return True
 
-    def __neq__(self, other):
+    def __neq__(self, other: object) -> bool:
         return not self.__eq__(other)
 
-    def __len__(self):
+    def __len__(self) -> int:
         raise NotImplementedError
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         raise NotImplementedError
 
-    def __contains__(self, i):
+    def __contains__(self, i: int) -> bool:
         raise NotImplementedError
 
-    def __or__(self, other):
+    def __or__(self, other: IntSetLike) -> DocIdSet:
         return self.union(other)
 
-    def __and__(self, other):
+    def __and__(self, other: IntSetLike) -> DocIdSet:
         return self.intersection(other)
 
-    def __sub__(self, other):
+    def __sub__(self, other: IntSetLike) -> DocIdSet:
         return self.difference(other)
 
-    def copy(self):
+    def copy(self) -> DocIdSet:
         raise NotImplementedError
 
-    def add(self, n):
+    def add(self, n: int) -> None:
         raise NotImplementedError
 
-    def discard(self, n):
+    def discard(self, n: int) -> None:
         raise NotImplementedError
 
-    def update(self, other):
+    def update(self, other: Iterable[int]) -> None:
         add = self.add
         for i in other:
             add(i)
 
-    def intersection_update(self, other):
+    def intersection_update(self, other: IntSetLike) -> None:
         for n in self:
             if n not in other:
                 self.discard(n)
 
-    def difference_update(self, other):
+    def difference_update(self, other: IntSetLike) -> None:
         for n in other:
             self.discard(n)
 
-    def invert_update(self, size):
+    def invert_update(self, size: int) -> None:
         """Updates the set in-place to contain numbers in the range
         ``[0 - size)`` except numbers that are in this set.
         """
@@ -344,29 +357,29 @@ class DocIdSet:
             else:
                 self.add(i)
 
-    def intersection(self, other):
+    def intersection(self, other: IntSetLike) -> DocIdSet:
         c = self.copy()
         c.intersection_update(other)
         return c
 
-    def union(self, other):
+    def union(self, other: IntSetLike) -> DocIdSet:
         c = self.copy()
         c.update(other)
         return c
 
-    def difference(self, other):
+    def difference(self, other: IntSetLike) -> DocIdSet:
         c = self.copy()
         c.difference_update(other)
         return c
 
-    def invert(self, size):
+    def invert(self, size: int) -> DocIdSet:
         c = self.copy()
         c.invert_update(size)
         return c
 
-    def isdisjoint(self, other):
-        a = self
-        b = other
+    def isdisjoint(self, other: IntSetLike) -> bool:
+        a: IntSetLike = self
+        b: IntSetLike = other
         if len(other) < len(self):
             a, b = other, self
         for num in a:
@@ -374,19 +387,19 @@ class DocIdSet:
                 return False
         return True
 
-    def before(self, i):
+    def before(self, i: int) -> int | None:
         """Returns the previous integer in the set before ``i``, or None."""
         raise NotImplementedError
 
-    def after(self, i):
+    def after(self, i: int) -> int | None:
         """Returns the next integer in the set after ``i``, or None."""
         raise NotImplementedError
 
-    def first(self):
+    def first(self) -> int | None:
         """Returns the first (lowest) integer in the set."""
         raise NotImplementedError
 
-    def last(self):
+    def last(self) -> int | None:
         """Returns the last (highest) integer in the set."""
         raise NotImplementedError
 
@@ -394,21 +407,21 @@ class DocIdSet:
 class BaseBitSet(DocIdSet):
     # Methods to override
 
-    def byte_count(self):
+    def byte_count(self) -> int:
         raise NotImplementedError
 
-    def _get_byte(self, i):
+    def _get_byte(self, i: int) -> int:
         raise NotImplementedError
 
-    def _iter_bytes(self):
+    def _iter_bytes(self) -> Iterator[int]:
         raise NotImplementedError
 
     # Base implementations
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(_1SPERBYTE[b] for b in self._iter_bytes())
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         base = 0
         for byte in self._iter_bytes():
             for i in range(8):
@@ -416,24 +429,24 @@ class BaseBitSet(DocIdSet):
                     yield base + i
             base += 8
 
-    def __nonzero__(self):
+    def __nonzero__(self) -> bool:
         return any(n for n in self._iter_bytes())
 
     __bool__ = __nonzero__
 
-    def __contains__(self, i):
+    def __contains__(self, i: int) -> bool:
         bucket = i // 8
         if bucket >= self.byte_count():
             return False
         return bool(self._get_byte(bucket) & (1 << (i & 7)))
 
-    def first(self):
+    def first(self) -> int | None:
         return self.after(-1)
 
-    def last(self):
+    def last(self) -> int | None:
         return self.before(self.byte_count() * 8 + 1)
 
-    def before(self, i):
+    def before(self, i: int) -> int | None:
         _get_byte = self._get_byte
         size = self.byte_count() * 8
 
@@ -459,7 +472,7 @@ class BaseBitSet(DocIdSet):
 
         return None
 
-    def after(self, i):
+    def after(self, i: int) -> int | None:
         _get_byte = self._get_byte
         size = self.byte_count() * 8
 
@@ -501,7 +514,7 @@ class OnDiskBitSet(BaseBitSet):
     [1, 2, 7, 10, 15]
     """
 
-    def __init__(self, dbfile, basepos, bytecount):
+    def __init__(self, dbfile: Any, basepos: int, bytecount: int) -> None:
         """
         :param dbfile: a :class:`~whoosh.filedb.structfile.StructFile` object
             to read from.
@@ -513,21 +526,21 @@ class OnDiskBitSet(BaseBitSet):
         self._basepos = basepos
         self._bytecount = bytecount
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "%s(%s, %d, %d)" % (
             self.__class__.__name__,
-            self.dbfile,
+            self._dbfile,
             self._basepos,
-            self.bytecount,
+            self._bytecount,
         )
 
-    def byte_count(self):
+    def byte_count(self) -> int:
         return self._bytecount
 
-    def _get_byte(self, n):
+    def _get_byte(self, n: int) -> int:
         return self._dbfile.get_byte(self._basepos + n)
 
-    def _iter_bytes(self):
+    def _iter_bytes(self) -> Iterator[int]:
         dbfile = self._dbfile
         dbfile.seek(self._basepos)
         for _ in range(self._bytecount):
@@ -540,7 +553,7 @@ class BitSet(BaseBitSet):
     large built-in set of integers, but wastes memory for sparse sets.
     """
 
-    def __init__(self, source=None, size=0):
+    def __init__(self, source: Iterable[int] | None = None, size: int = 0) -> None:
         """
         :param maxsize: the maximum size of the bit array.
         :param source: an iterable of positive integers to add to this set.
@@ -559,26 +572,26 @@ class BitSet(BaseBitSet):
             for num in source:
                 add(num)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({list(self)!r})"
 
-    def byte_count(self):
+    def byte_count(self) -> int:
         return len(self.bits)
 
-    def _get_byte(self, n):
+    def _get_byte(self, n: int) -> int:
         return self.bits[n]
 
-    def _iter_bytes(self):
+    def _iter_bytes(self) -> Iterator[int]:
         return iter(self.bits)
 
-    def _trim(self):
+    def _trim(self) -> None:
         bits = self.bits
         last = len(self.bits) - 1
         while last >= 0 and not bits[last]:
             last -= 1
         del self.bits[last + 1 :]
 
-    def _resize(self, tosize):
+    def _resize(self, tosize: int) -> None:
         curlength = len(self.bits)
         newlength = bytes_for_bits(tosize)
         if newlength > curlength:
@@ -586,14 +599,14 @@ class BitSet(BaseBitSet):
         elif newlength < curlength:
             del self.bits[newlength + 1 :]
 
-    def _zero_extra_bits(self, size):
+    def _zero_extra_bits(self, size: int) -> None:
         bits = self.bits
         spill = size - ((len(bits) - 1) * 8)
         if spill:
             mask = 2**spill - 1
             bits[-1] = bits[-1] & mask
 
-    def _logic(self, obj, op, other):
+    def _logic(self, obj: BitSet, op: Callable[[int, int], int], other: BitSet) -> BitSet:
         objbits = obj.bits
         for i, (byte1, byte2) in enumerate(
             zip_longest(objbits, other.bits, fillvalue=0)
@@ -607,83 +620,85 @@ class BitSet(BaseBitSet):
         obj._trim()
         return obj
 
-    def to_disk(self, dbfile):
+    def to_disk(self, dbfile: Any) -> int:
         dbfile.write_array(self.bits)
         return len(self.bits)
 
     @classmethod
-    def from_bytes(cls, bs):
+    def from_bytes(cls, bs: Iterable[int]) -> BitSet:
         b = cls()
         b.bits = array("B", bs)
         return b
 
     @classmethod
-    def from_disk(cls, dbfile, bytecount):
+    def from_disk(cls, dbfile: Any, bytecount: int) -> BitSet:
         return cls.from_bytes(dbfile.read_array("B", bytecount))
 
-    def copy(self):
+    def copy(self) -> BitSet:
         b = self.__class__()
         b.bits = array("B", iter(self.bits))
         return b
 
-    def clear(self):
+    def clear(self) -> None:
         for i in range(len(self.bits)):
             self.bits[i] = 0
 
-    def add(self, i):
+    def add(self, i: int) -> None:
         bucket = i >> 3
         if bucket >= len(self.bits):
             self._resize(i + 1)
         self.bits[bucket] |= 1 << (i & 7)
 
-    def discard(self, i):
+    def discard(self, i: int) -> None:
         bucket = i >> 3
         self.bits[bucket] &= ~(1 << (i & 7))
 
-    def _resize_to_other(self, other):
+    def _resize_to_other(self, other: Iterable[int]) -> None:
         if isinstance(other, (list, tuple, set, frozenset)):
             maxbit = max(other)
             if maxbit // 8 > len(self.bits):
                 self._resize(maxbit)
 
-    def update(self, iterable):
+    def update(self, iterable: Iterable[int]) -> None:
         self._resize_to_other(iterable)
         DocIdSet.update(self, iterable)
 
-    def intersection_update(self, other):
+    def intersection_update(self, other: IntSetLike) -> None:
         if isinstance(other, BitSet):
-            return self._logic(self, operator.__and__, other)
+            self._logic(self, operator.__and__, other)
+            return
         discard = self.discard
         for n in self:
             if n not in other:
                 discard(n)
 
-    def difference_update(self, other):
+    def difference_update(self, other: IntSetLike) -> None:
         if isinstance(other, BitSet):
-            return self._logic(self, lambda x, y: x & ~y, other)
+            self._logic(self, lambda x, y: x & ~y, other)
+            return
         discard = self.discard
         for n in other:
             discard(n)
 
-    def invert_update(self, size):
+    def invert_update(self, size: int) -> None:
         bits = self.bits
         for i in range(len(bits)):
             bits[i] = ~bits[i] & 0xFF
         self._zero_extra_bits(size)
 
-    def union(self, other):
+    def union(self, other: IntSetLike) -> BitSet:
         if isinstance(other, BitSet):
             return self._logic(self.copy(), operator.__or__, other)
         b = self.copy()
         b.update(other)
         return b
 
-    def intersection(self, other):
+    def intersection(self, other: IntSetLike) -> BitSet:
         if isinstance(other, BitSet):
             return self._logic(self.copy(), operator.__and__, other)
         return BitSet(source=(n for n in self if n in other))
 
-    def difference(self, other):
+    def difference(self, other: IntSetLike) -> BitSet:
         if isinstance(other, BitSet):
             return self._logic(self.copy(), lambda x, y: x & ~y, other)
         return BitSet(source=(n for n in self if n not in other))
@@ -692,36 +707,36 @@ class BitSet(BaseBitSet):
 class SortedIntSet(DocIdSet):
     """A DocIdSet backed by a sorted array of integers."""
 
-    def __init__(self, source=None, typecode="I"):
+    def __init__(self, source: Iterable[int] | None = None, typecode: str = "I") -> None:
         if source:
             self.data = array(typecode, sorted(source))
         else:
             self.data = array(typecode)
         self.typecode = typecode
 
-    def copy(self):
+    def copy(self) -> SortedIntSet:
         sis = SortedIntSet()
         sis.data = array(self.typecode, self.data)
         return sis
 
-    def size(self):
+    def size(self) -> int:
         return len(self.data) * self.data.itemsize
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.data!r})"
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.data)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         return iter(self.data)
 
-    def __nonzero__(self):
+    def __nonzero__(self) -> bool:
         return bool(self.data)
 
     __bool__ = __nonzero__
 
-    def __contains__(self, i):
+    def __contains__(self, i: int) -> bool:
         data = self.data
         if not data or i < data[0] or i > data[-1]:
             return False
@@ -731,7 +746,7 @@ class SortedIntSet(DocIdSet):
             return False
         return data[pos] == i
 
-    def add(self, i):
+    def add(self, i: int) -> None:
         data = self.data
         if not data or i > data[-1]:
             data.append(i)
@@ -749,34 +764,34 @@ class SortedIntSet(DocIdSet):
                 if data[pos] != i:
                     data.insert(pos, i)
 
-    def discard(self, i):
+    def discard(self, i: int) -> None:
         data = self.data
         pos = bisect_left(data, i)
         if data[pos] == i:
             data.pop(pos)
 
-    def clear(self):
+    def clear(self) -> None:
         self.data = array(self.typecode)
 
-    def intersection_update(self, other):
+    def intersection_update(self, other: IntSetLike) -> None:
         self.data = array(self.typecode, (num for num in self if num in other))
 
-    def difference_update(self, other):
+    def difference_update(self, other: IntSetLike) -> None:
         self.data = array(self.typecode, (num for num in self if num not in other))
 
-    def intersection(self, other):
+    def intersection(self, other: IntSetLike) -> SortedIntSet:
         return SortedIntSet(num for num in self if num in other)
 
-    def difference(self, other):
+    def difference(self, other: IntSetLike) -> SortedIntSet:
         return SortedIntSet(num for num in self if num not in other)
 
-    def first(self):
+    def first(self) -> int | None:
         return self.data[0]
 
-    def last(self):
+    def last(self) -> int | None:
         return self.data[-1]
 
-    def before(self, i):
+    def before(self, i: int) -> int | None:
         data = self.data
         pos = bisect_left(data, i)
         if pos < 1:
@@ -784,7 +799,7 @@ class SortedIntSet(DocIdSet):
         else:
             return data[pos - 1]
 
-    def after(self, i):
+    def after(self, i: int) -> int | None:
         data = self.data
         if not data or i >= data[-1]:
             return None
@@ -801,7 +816,7 @@ class ReverseIdSet(DocIdSet):
     set are not in this set, and vice-versa.
     """
 
-    def __init__(self, idset, limit):
+    def __init__(self, idset: DocIdSet, limit: int) -> None:
         """
         :param idset: the DocIdSet object to wrap.
         :param limit: the highest possible ID plus one.
@@ -810,13 +825,13 @@ class ReverseIdSet(DocIdSet):
         self.idset = idset
         self.limit = limit
 
-    def __len__(self):
+    def __len__(self) -> int:
         return self.limit - len(self.idset)
 
-    def __contains__(self, i):
+    def __contains__(self, i: int) -> bool:
         return i not in self.idset
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         ids = iter(self.idset)
         try:
             nx = next(ids)
@@ -832,25 +847,28 @@ class ReverseIdSet(DocIdSet):
             else:
                 yield i
 
-    def add(self, n):
+    def add(self, n: int) -> None:
         self.idset.discard(n)
 
-    def discard(self, n):
+    def discard(self, n: int) -> None:
         self.idset.add(n)
 
-    def first(self):
+    def first(self) -> int | None:
         for i in self:
             return i
+        return None
 
-    def last(self):
+    def last(self) -> int | None:
         idset = self.idset
         maxid = self.limit - 1
-        if idset.last() < maxid - 1:
+        last = idset.last()
+        if last is not None and last < maxid - 1:
             return maxid
 
         for i in range(maxid, -1, -1):
             if i not in idset:
                 return i
+        return None
 
 
 ROARING_CUTOFF = 1 << 12
@@ -865,32 +883,32 @@ class RoaringIdSet(DocIdSet):
 
     cutoff = 2**12
 
-    def __init__(self, source=None):
-        self.idsets = []
+    def __init__(self, source: Iterable[int] | None = None) -> None:
+        self.idsets: list[DocIdSet] = []
         if source:
             self.update(source)
 
-    def __len__(self):
+    def __len__(self) -> int:
         if not self.idsets:
             return 0
 
         return sum(len(idset) for idset in self.idsets)
 
-    def __contains__(self, n):
+    def __contains__(self, n: int) -> bool:
         bucket = n >> 16
         if bucket >= len(self.idsets):
             return False
         return (n - (bucket << 16)) in self.idsets[bucket]
 
-    def __iter__(self):
-        for i, idset in self.idsets:
+    def __iter__(self) -> Iterator[int]:
+        for i, idset in enumerate(self.idsets):
             floor = i << 16
             for n in idset:
                 yield floor + n
 
-    def _find(self, n):
+    def _find(self, n: int) -> tuple[int, int, DocIdSet]:
         bucket = n >> 16
-        floor = n << 16
+        floor = bucket << 16
         if bucket >= len(self.idsets):
             self.idsets.extend(
                 [SortedIntSet() for _ in range(len(self.idsets), bucket + 1)]
@@ -898,14 +916,14 @@ class RoaringIdSet(DocIdSet):
         idset = self.idsets[bucket]
         return bucket, floor, idset
 
-    def add(self, n):
+    def add(self, n: int) -> None:
         bucket, floor, idset = self._find(n)
         oldlen = len(idset)
         idset.add(n - floor)
         if oldlen <= ROARING_CUTOFF < len(idset):
             self.idsets[bucket] = BitSet(idset)
 
-    def discard(self, n):
+    def discard(self, n: int) -> None:
         bucket, floor, idset = self._find(n)
         oldlen = len(idset)
         idset.discard(n - floor)
@@ -918,7 +936,7 @@ class MultiIdSet(DocIdSet):
     aggregated, read-only set.
     """
 
-    def __init__(self, idsets, offsets):
+    def __init__(self, idsets: list[DocIdSet], offsets: list[int]) -> None:
         """
         :param idsets: a list of DocIdSet objects.
         :param offsets: a list of offsets corresponding to the DocIdSet objects
@@ -929,23 +947,23 @@ class MultiIdSet(DocIdSet):
         self.idsets = idsets
         self.offsets = offsets
 
-    def _document_set(self, n):
+    def _document_set(self, n: int) -> int:
         offsets = self.offsets
         return max(bisect_left(offsets, n), len(self.offsets) - 1)
 
-    def _set_and_docnum(self, n):
+    def _set_and_docnum(self, n: int) -> tuple[DocIdSet, int]:
         setnum = self._document_set(n)
         offset = self.offsets[setnum]
         return self.idsets[setnum], n - offset
 
-    def __len__(self):
+    def __len__(self) -> int:
         return sum(len(idset) for idset in self.idsets)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[int]:
         for idset, offset in zip(self.idsets, self.offsets):
             for docnum in idset:
                 yield docnum + offset
 
-    def __contains__(self, item):
+    def __contains__(self, item: int) -> bool:
         idset, n = self._set_and_docnum(item)
         return n in idset

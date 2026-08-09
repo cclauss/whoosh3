@@ -193,3 +193,46 @@ def test_ondisk():
     f.seek(0)
     b = BitSet.from_disk(f, size)
     assert list(b) == list(bs)
+
+
+def test_ondisk_repr():
+    # Regression: OnDiskBitSet.__repr__ referenced non-existent attributes
+    # (self.dbfile / self.bytecount) and raised AttributeError. It should
+    # produce a string mentioning the class name and the byte count.
+    bs = BitSet([1, 2, 7, 10, 15])
+    st = RamStorage()
+    f = st.create_file("test_repr")
+    size = bs.to_disk(f)
+    f.close()
+
+    f = st.open_file("test_repr")
+    b = OnDiskBitSet(f, 0, size)
+    r = repr(b)
+    assert "OnDiskBitSet" in r
+    assert str(size) in r
+
+
+def test_roaring_basics():
+    from whoosh.idsets import RoaringIdSet
+
+    # Regression: RoaringIdSet._find used ``n << 16`` instead of
+    # ``bucket << 16`` for the range floor, so any id in a bucket above 0
+    # produced a negative offset and raised OverflowError. And __iter__
+    # unpacked ``self.idsets`` (a list) as if it were (index, set) pairs.
+    ids = [0, 1, 2, 70000, 70001, 200000]
+    r = RoaringIdSet(ids)
+
+    assert len(r) == len(ids)
+    for n in ids:
+        assert n in r
+    assert 3 not in r
+    assert 70002 not in r
+    assert sorted(r) == sorted(ids)
+
+    r.discard(70001)
+    assert 70001 not in r
+    assert sorted(r) == sorted(x for x in ids if x != 70001)
+
+    r.add(70001)
+    assert 70001 in r
+    assert sorted(r) == sorted(ids)

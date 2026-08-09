@@ -6,6 +6,32 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.38.0] - 2026-08-09
+
+### Added
+
+- Full type annotations for `whoosh.idsets` — the public doc-id set API
+  (`DocIdSet`, `BitSet`, `OnDiskBitSet`, `SortedIntSet`, `ReverseIdSet`,
+  `RoaringIdSet`, `MultiIdSet`) is now typed end-to-end, so editors and
+  `mypy`/`pyright` get accurate signatures for indexes, iteration and set
+  algebra. A new `IntSetLike` alias documents the "another set of ints"
+  parameter accepted by the combining/comparison methods. The module is
+  clean under both `mypy` and `ruff` (closes gh#86; part of the incremental
+  typing effort tracked in gh#3).
+
+### Fixed
+
+- `RoaringIdSet` was unusable for any id at or above 65536: `_find()` computed
+  the per-bucket range floor as `n << 16` instead of `bucket << 16`, so adding
+  such an id produced a negative in-bucket offset and raised `OverflowError`.
+  Its `__iter__` also tried to unpack `self.idsets` (a flat list) as
+  `(index, set)` pairs and raised `TypeError`. Both are fixed and covered by a
+  new regression test, so `RoaringIdSet` now stores and iterates large id sets
+  correctly.
+- `OnDiskBitSet.__repr__` referenced non-existent attributes (`self.dbfile`,
+  `self.bytecount`) and raised `AttributeError` when repr'd; it now uses the
+  real `_dbfile`/`_bytecount` fields.
+
 ## [3.37.0] - 2026-08-09
 
 ### Fixed
