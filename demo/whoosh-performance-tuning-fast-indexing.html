@@ -19,7 +19,7 @@
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:image" content="https://priya-sundaram-dev.github.io/whoosh/og-image.png" />
 <meta name="twitter:title" content="Whoosh performance tuning: fast indexing & search" />
-<meta name="twitter:description" content="The #1 cause of slow Whoosh indexing is a writer per document (18x slower). Batch it, tune limitmb, and reuse searchers." />
+<meta name="twitter:description" content="The #1 cause of slow Whoosh indexing is a writer per document (20x slower). Batch it, tune limitmb, and reuse searchers." />
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -117,12 +117,12 @@ for doc_id, text in documents:
 w.commit()              # a single flush at the end
 </code></pre>
 
-  <p>Measured on 500 small documents (Python 3, whoosh3 3.30.0):</p>
+  <p>Measured on 500 small documents (Python 3, whoosh3 3.39.0):</p>
   <table>
     <tr><th>Approach</th><th>Time</th></tr>
-    <tr><td>Writer + commit per document</td><td>2.5 s</td></tr>
+    <tr><td>Writer + commit per document</td><td>2.8 s</td></tr>
     <tr><td>Single writer, one commit</td><td><span class="win">0.14 s</span></td></tr>
-    <tr><td colspan="2"><strong>≈ 18× faster</strong>, same result, same index.</td></tr>
+    <tr><td colspan="2"><strong>≈ 20× faster</strong>, same result, same index.</td></tr>
   </table>
 
   <div class="note">
@@ -254,7 +254,7 @@ finally:
 
   <hr />
   <p style="font-size:.85rem;color:var(--muted)">
-    All timings above were measured against whoosh3 3.30.0 on a single machine
+    All timings above were measured against whoosh3 3.39.0 on a single machine
     before publishing; exact numbers depend on your hardware, document size, and
     schema, so treat them as ratios rather than absolutes. "Whoosh" is the
     pure-Python search library originally by Matt Chaput; this is an actively

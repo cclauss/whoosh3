@@ -1,0 +1,1 @@
+we chose Whoosh because it needs no server and is easy to embed
