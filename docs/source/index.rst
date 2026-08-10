@@ -52,6 +52,7 @@ Contents
     dates
     query
     analysis
+    recall
     stemming
     ngrams
     facets
