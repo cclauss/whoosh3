@@ -34,8 +34,12 @@ occurance of a term.
 from __future__ import annotations
 
 from collections import defaultdict
-from typing import Any, Callable, Iterable, Iterator, Union, List, Tuple
 from pickle import dumps, loads
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable, Iterable
+    from typing import Any
 
 from whoosh.analysis import entoken, unstopped
 from whoosh.system import (
@@ -71,7 +75,7 @@ class Format:
         self.field_boost = field_boost
         self.options = options
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: object) -> bool:
         return (
             other
             and self.__class__ is other.__class__
