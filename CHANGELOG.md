@@ -6,6 +6,39 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.40.0] - 2026-08-10
+
+### Fixed
+
+- Three latent bugs in `whoosh.formats` `combine()` — the segment-merge path
+  that folds the posting values for a term from several segments into one
+  during `optimize()`/`writer.commit()`:
+  - `Frequency.combine` called a non-existent `decode_value` instead of
+    `decode_frequency`, so merging a frequency-format field across segments
+    raised `AttributeError`.
+  - `Characters.combine` and `CharacterBoosts.combine` transposed the
+    per-position lookup (`pos[s]` instead of `s[pos]`), raising `TypeError`
+    when the same token position appeared in more than one segment being
+    merged.
+  These were surfaced by type-checking while annotating the module and are now
+  covered by round-trip regression tests (`tests/test_formats_combine.py`) that
+  pin `combine()` behaviour for `Existence`, `Frequency`, `Positions`,
+  `PositionBoosts`, `Characters`, and `CharacterBoosts`. Fix contributed by
+  [@AdvaitVarhade](https://github.com/AdvaitVarhade) (gh#89, closes gh#88).
+
+### Added
+
+- Full type annotations for `whoosh.formats` — the `Format` class hierarchy
+  (`Existence`, `Frequency`, `Positions`, `PositionBoosts`, `Characters`,
+  `CharacterBoosts`) is now typed end-to-end, so editors and `mypy`/`pyright`
+  get accurate signatures for the posting encode/decode/`combine` API. The
+  module is clean under both `mypy` and `ruff`. Contributed by
+  [@AdvaitVarhade](https://github.com/AdvaitVarhade) (gh#89).
+- A new ["Improving recall"](https://priya-sundaram-dev.github.io/whoosh/docs/recall.html)
+  guide covering stemming, `Variations`, fuzzy terms, did-you-mean spelling
+  correction, and pseudo-relevance feedback for when searches return too few
+  results.
+
 ## [3.39.0] - 2026-08-09
 
 ### Changed
