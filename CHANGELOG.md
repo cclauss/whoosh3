@@ -6,6 +6,13 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+
+- Type hints for `whoosh.externalsort` (`SortingPool` and the module-level
+  `sort()` helper), continuing the incremental typing effort toward a fully
+  type-checked public API. Contributed by
+  [@ShlokShar](https://github.com/ShlokShar) (gh#91, closes gh#90).
+
 ## [3.40.0] - 2026-08-10
 
 ### Fixed
