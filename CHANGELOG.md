@@ -8,6 +8,11 @@ All notable changes to this project are documented here. This project follows
 
 ### Added
 
+- Type hints for `whoosh.fields` — the field-type hierarchy (`FieldType`,
+  `TEXT`, `ID`, `KEYWORD`, `NUMERIC`, `DATETIME`, `BOOLEAN`, `Schema`, …) that
+  users touch most when defining a schema, so editors and mypy now surface
+  accurate signatures. Contributed by
+  [@TheGittyPerson](https://github.com/TheGittyPerson) (gh#94, closes gh#93).
 - Type hints for `whoosh.externalsort` (`SortingPool` and the module-level
   `sort()` helper), continuing the incremental typing effort toward a fully
   type-checked public API. Contributed by
