@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.41.0] - 2026-08-20
+
 ### Added
 
 - Type hints for the `whoosh.columns` base classes (`Column`, `ColumnWriter`,
