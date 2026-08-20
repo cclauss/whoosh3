@@ -112,6 +112,42 @@ About section of the README.)*
       end-to-end regression tests (`tests/test_example_acronyms.py`) that
       contrast it against the default analyzer.
 
+## Done (3.38.0–3.41.0 — released 2026-08-09 … 2026-08-20)
+
+- [x] **Real bugs fixed in the segment-merge path (3.40.0).** Three latent
+      bugs in `whoosh.formats` `combine()` — the code that folds a term's
+      posting values across segments during `optimize()`/`commit()` — were
+      surfaced while type-checking the module: `Frequency.combine` called a
+      non-existent `decode_value`, and `Characters`/`CharacterBoosts` transposed
+      their per-position lookup, so merging those fields across segments raised
+      `AttributeError`/`TypeError`. All three are fixed and pinned by round-trip
+      regression tests (`tests/test_formats_combine.py`). Fix contributed by
+      [@AdvaitVarhade](https://github.com/AdvaitVarhade) (gh#89, closes gh#88).
+- [x] **First step on indexing throughput (3.39.0).** `FieldWriter.add_postings`
+      no longer rebuilds the length-field name and re-resolves the length column
+      reader on every posting; it binds a per-field length accessor once when
+      the field changes (new `PerDocumentReader.doc_field_length_reader`). This
+      hoists ~600k redundant string builds and look-ups out of the hot loop in a
+      5,000-doc build, with byte-identical output and no on-disk format change —
+      the first format-safe step of the profiled indexing work in
+      [Later / exploring](#later--exploring).
+- [x] **New "Improving recall" guide (3.40.0).** A
+      [walkthrough](https://priya-sundaram-dev.github.io/whoosh/docs/recall.html)
+      of stemming, `Variations`, fuzzy terms, did-you-mean spelling correction,
+      and pseudo-relevance feedback for when searches return too few results.
+- [x] **Community typing sweep continues across the storage/read layer.** With
+      new first-time contributors: `whoosh.formats` (gh#89, by
+      [@AdvaitVarhade](https://github.com/AdvaitVarhade)), `whoosh.idsets`
+      (gh#86), `whoosh.externalsort` (gh#91, by
+      [@ShlokShar](https://github.com/ShlokShar)), `whoosh.fields` (gh#94, by
+      [@TheGittyPerson](https://github.com/TheGittyPerson)), `whoosh.columns`
+      base classes (gh#96, by [@DebayanSen96](https://github.com/DebayanSen96)),
+      and the `IndexReader` context-manager methods (gh#98, by
+      [@Muhammad08-dot](https://github.com/Muhammad08-dot)) are now annotated,
+      each guarded by the `mypy` smoke job. Types are correct-only, never
+      fabricated. `whoosh.reading` and `whoosh.collectors` remain open as
+      good-first-issues for the next contributors (gh#97, gh#92).
+
 ## Now (next patch/minor)
 
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
@@ -269,3 +305,4 @@ About section of the README.)*
 
 Feedback welcome — open an issue or discussion. The roadmap is a living
 document and will change as the ecosystem does.
+
