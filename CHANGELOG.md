@@ -6,6 +6,9 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- Type hints for `IndexReader.__enter__`/`__exit__` context-manager methods (partial progress on #97). Thanks to @Muhammad08-dot for their first contribution! (#98)
+
 ## [3.41.0] - 2026-08-20
 
 ### Added
