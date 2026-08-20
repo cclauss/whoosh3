@@ -9,6 +9,13 @@ All notable changes to this project are documented here. This project follows
 ### Added
 - Type hints for `IndexReader.__enter__`/`__exit__` context-manager methods (partial progress on #97). Thanks to @Muhammad08-dot for their first contribution! (#98)
 
+### Fixed
+- `whoosh3` codec: corrected a dead-store in `_write_block` where the
+  small-block compression skip was immediately overwritten and never took
+  effect. Behaviourally a no-op at the current threshold (guaranteed no index
+  size or format change), but the code now matches its documented intent and
+  clears the ground for a follow-up tiny-block compression optimization.
+
 ## [3.41.0] - 2026-08-20
 
 ### Added

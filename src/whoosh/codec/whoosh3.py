@@ -815,11 +815,18 @@ class W3PostingsWriter(base.PostingsWriter):
         data = (self._mini_ids(), self._mini_weights(), self._mini_values())
         # Pickle the tuple
         databytes = dumps(data, 2)
-        # If the pickle is less than 20 bytes, don't bother compressing
+        # Compress the pickle (if self._compression > 0), but skip compression
+        # for a payload so small that zlib's header would only add overhead
+        # instead of shrinking it. NOTE: the previous code set ``comp = 0`` here
+        # and then immediately overwrote it with ``comp = self._compression``,
+        # so this tiny-block skip never actually took effect. Ordered correctly
+        # now. (The threshold is conservative — the smallest real block pickle
+        # is ~56 bytes — so this is behaviourally a no-op today; raising it to
+        # skip compression on single-posting blocks of rare terms is tracked as
+        # a follow-up optimization.)
+        comp = self._compression
         if len(databytes) < 20:
             comp = 0
-        # Compress the pickle (if self._compression > 0)
-        comp = self._compression
         if comp:
             databytes = zlib.compress(databytes, comp)
 
