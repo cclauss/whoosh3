@@ -8,6 +8,11 @@ All notable changes to this project are documented here. This project follows
 
 ### Added
 
+- Type hints for the `whoosh.columns` base classes (`Column`, `ColumnWriter`,
+  and `ColumnReader`) — the abstract interface every column store implements,
+  so editors and mypy surface accurate signatures when writing or subclassing a
+  column type. Contributed by
+  [@DebayanSen96](https://github.com/DebayanSen96) (gh#96, closes gh#95).
 - Type hints for `whoosh.fields` — the field-type hierarchy (`FieldType`,
   `TEXT`, `ID`, `KEYWORD`, `NUMERIC`, `DATETIME`, `BOOLEAN`, `Schema`, …) that
   users touch most when defining a schema, so editors and mypy now surface
