@@ -112,7 +112,21 @@ About section of the README.)*
       end-to-end regression tests (`tests/test_example_acronyms.py`) that
       contrast it against the default analyzer.
 
-## Done (3.38.0–3.41.0 — released 2026-08-09 … 2026-08-20)
+## Done (3.38.0–3.42.0 — released 2026-08-09 … 2026-08-21)
+
+- [x] **Tiny-block compression skip on the write path (3.42.0).** Building on
+      the format-safe indexing work above, the `whoosh3` codec now skips zlib
+      for postings blocks below a *measured* 80-byte crossover
+      (`COMPRESSION_MIN_SIZE`), so single-posting blocks of rare terms — the
+      long tail of any Zipfian corpus — are stored uncompressed instead of being
+      *expanded* by zlib's header overhead. The per-block compression flag is
+      written into the block header and honoured on read, so the change is fully
+      format-compatible. Contributed by
+      [@tltaylor1](https://github.com/tltaylor1) (gh#100, closes gh#99), whose
+      pre/post-size instrumentation found the crossover empirically rather than
+      guessing. A latent dead-store that had been silently disabling the older
+      skip was fixed in the same release.
+
 
 - [x] **Real bugs fixed in the segment-merge path (3.40.0).** Three latent
       bugs in `whoosh.formats` `combine()` — the code that folds a term's
