@@ -9,6 +9,16 @@ All notable changes to this project are documented here. This project follows
 ### Added
 - Type hints for `IndexReader.__enter__`/`__exit__` context-manager methods (partial progress on #97). Thanks to @Muhammad08-dot for their first contribution! (#98)
 
+### Performance
+- `whoosh3` codec: raised the small-block compression-skip threshold to a
+  measured 80-byte crossover (`COMPRESSION_MIN_SIZE`), so single-posting blocks
+  of rare terms are stored uncompressed instead of being expanded by zlib's
+  header overhead. Reduces build time and slightly shrinks on-disk indexes on
+  Zipfian corpora; the per-block compression flag is stored in the block
+  header and honoured on read, so the change is format-compatible. Thanks to
+  [@tltaylor1](https://github.com/tltaylor1) for the measured analysis and
+  tests (#100, closes #99).
+
 ### Fixed
 - `whoosh3` codec: corrected a dead-store in `_write_block` where the
   small-block compression skip was immediately overwritten and never took
