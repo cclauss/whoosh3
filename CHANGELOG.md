@@ -19,8 +19,22 @@ All notable changes to this project are documented here. This project follows
   `supports_caches`, `has_column`, `column_reader`). `mypy` on `reading.py`
   introduces no new errors and the reader/search/vector/spelling/column test
   suites pass.
+- Type hints for the wrapping/facet/filter collectors in `whoosh.collectors`
+  (second pass on #101, following the core scoring path in #92): annotated
+  `SortingCollector`, `UnsortedCollector`, `WrappingCollector`,
+  `FilterCollector`, `FacetCollector`, `CollapseCollector`,
+  `TimeLimitCollector` and `TermsCollector`. The dynamic attributes that these
+  collectors attach to `Results` (`filtered_count`, `allowed`, `restricted`,
+  `collapsed_counts`, `termdocs`, `docterms`) are now declared on the `Results`
+  class so they are part of the documented, type-checked surface. `mypy` on
+  `collectors.py` is now fully clean (0 errors).
 
 ### Fixed
+- `CollapseCollector.all_ids()` iterated `child.subsearchers()`, but a
+  `Collector` has no `subsearchers()` method (`subsearchers` is an attribute of
+  a `Searcher`), so calling `all_ids()` on a collapse collector raised
+  `AttributeError`. It now iterates `self.top_searcher.leaf_searchers()`, the
+  same idiom used by `Collector.run()` and the other collectors.
 - `IndexReader.doc_count()` (the abstract base implementation) referenced a
   non-existent `self.deleted_count()` method, so any third-party `IndexReader`
   subclass that inherited the base `doc_count` instead of overriding it would

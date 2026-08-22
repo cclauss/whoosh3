@@ -1028,6 +1028,17 @@ class Results:
     so keeps all files used by it open.
     """
 
+    # Optional attributes set by wrapping collectors (see whoosh.collectors).
+    # Declared here so they are part of the documented, type-checked surface;
+    # they are only present when the corresponding collector produced the
+    # results.
+    filtered_count: int
+    allowed: Any
+    restricted: Any
+    collapsed_counts: dict
+    termdocs: dict
+    docterms: dict
+
     def __init__(
         self,
         searcher: Searcher,

@@ -341,7 +341,7 @@ class ScoredCollector(Collector):
         Collector.__init__(self)
         self.replace = replace
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         # This collector requires a valid matcher at each step
         Collector.prepare(self, top_searcher, q, context)
 
@@ -552,7 +552,7 @@ class SortingCollector(Collector):
     information.
     """
 
-    def __init__(self, sortedby, limit=10, reverse=False):
+    def __init__(self, sortedby, limit: int = 10, reverse: bool = False) -> None:
         """
         :param sortedby: see :doc:`/facets`.
         :param reverse: If True, reverse the overall results. Note that you
@@ -564,7 +564,7 @@ class SortingCollector(Collector):
         self.limit = limit
         self.reverse = reverse
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         self.categorizer = self.sortfacet.categorizer(top_searcher)
         # If the categorizer requires a valid matcher, then tell the child
         # collector that we need it
@@ -597,7 +597,7 @@ class SortingCollector(Collector):
 
 
 class UnsortedCollector(Collector):
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         Collector.prepare(self, top_searcher, q, context.set(weighting=None))
         self.items = []
 
@@ -617,18 +617,18 @@ class UnsortedCollector(Collector):
 class WrappingCollector(Collector):
     """Base class for collectors that wrap other collectors."""
 
-    def __init__(self, child):
+    def __init__(self, child: Collector) -> None:
         self.child = child
 
     @property
-    def top_searcher(self):
+    def top_searcher(self) -> Searcher:  # type: ignore[override]
         return self.child.top_searcher
 
     @property
-    def context(self):
+    def context(self) -> SearchContext:  # type: ignore[override]
         return self.child.context
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         self.child.prepare(top_searcher, q, context)
 
     def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
@@ -695,7 +695,7 @@ class FilterCollector(WrappingCollector):
     filtered out of the results by the collector.
     """
 
-    def __init__(self, child, allow=None, restrict=None):
+    def __init__(self, child: Collector, allow=None, restrict=None) -> None:
         """
         :param child: the collector to wrap.
         :param allow: a query, Results object, or set-like object containing
@@ -710,7 +710,7 @@ class FilterCollector(WrappingCollector):
         self.allow = allow
         self.restrict = restrict
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         self.child.prepare(top_searcher, q, context)
 
         allow = self.allow
@@ -807,7 +807,7 @@ class FacetCollector(WrappingCollector):
         print(fc.facetmaps)
     """
 
-    def __init__(self, child, groupedby, maptype=None):
+    def __init__(self, child: Collector, groupedby, maptype=None) -> None:
         """
         :param groupedby: see :doc:`/facets`.
         :param maptype: a :class:` whoosh.sorting.FacetMap` type to use for any
@@ -818,7 +818,7 @@ class FacetCollector(WrappingCollector):
         self.facets = sorting.Facets.from_groupedby(groupedby)
         self.maptype = maptype
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         facets = self.facets
 
         # For each facet we're grouping by:
@@ -900,7 +900,7 @@ class CollapseCollector(WrappingCollector):
     See :ref:`collapsing` for more information.
     """
 
-    def __init__(self, child, keyfacet, limit=1, order=None):
+    def __init__(self, child: Collector, keyfacet, limit: int = 1, order=None) -> None:
         """
         :param child: the collector to wrap.
         :param keyfacet: a :class:` whoosh.sorting.Facet` to use for collapsing.
@@ -917,12 +917,13 @@ class CollapseCollector(WrappingCollector):
         self.keyfacet = sorting.MultiFacet.from_sortedby(keyfacet)
 
         self.limit = limit
+        self.orderfacet: sorting.MultiFacet | None
         if order:
             self.orderfacet = sorting.MultiFacet.from_sortedby(order)
         else:
             self.orderfacet = None
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         # Categorizer for getting the collapse key of a document
         self.keyer = self.keyfacet.categorizer(top_searcher)
         # Categorizer for getting the collapse order of a document
@@ -932,10 +933,10 @@ class CollapseCollector(WrappingCollector):
 
         # Dictionary mapping keys to lists of (sortkey, global_docnum) pairs
         # representing the best docs for that key
-        self.lists = defaultdict(list)
+        self.lists: defaultdict[Any, list] = defaultdict(list)
         # Dictionary mapping keys to the number of documents that have been
         # filtered out with that key
-        self.collapsed_counts = defaultdict(int)
+        self.collapsed_counts: defaultdict[Any, int] = defaultdict(int)
         # Total number of documents filtered out by collapsing
         self.collapsed_total = 0
 
@@ -961,7 +962,7 @@ class CollapseCollector(WrappingCollector):
         limit = self.limit
         counters: defaultdict[Any, int] = defaultdict(int)
 
-        for subsearcher, offset in child.subsearchers():
+        for subsearcher, offset in self.top_searcher.leaf_searchers():
             self.set_subsearcher(subsearcher, offset)
             matcher = child.matcher
             keyer = self.keyer
@@ -1058,7 +1059,13 @@ class TimeLimitCollector(WrappingCollector):
     is slow the search could exceed the time limit.
     """
 
-    def __init__(self, child, timelimit, greedy=False, use_alarm=True):
+    def __init__(
+        self,
+        child: Collector,
+        timelimit: float,
+        greedy: bool = False,
+        use_alarm: bool = True,
+    ) -> None:
         """
         :param child: the collector to wrap.
         :param timelimit: the maximum amount of time (in seconds) to
@@ -1080,10 +1087,10 @@ class TimeLimitCollector(WrappingCollector):
         else:
             self.use_alarm = False
 
-        self.timer = None
+        self.timer: threading.Timer | None = None
         self.timedout = False
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         self.child.prepare(top_searcher, q, context)
 
         self.timedout = False
@@ -1097,7 +1104,7 @@ class TimeLimitCollector(WrappingCollector):
         self.timer = threading.Timer(self.timelimit, self._timestop)
         self.timer.start()
 
-    def _timestop(self):
+    def _timestop(self) -> None:
         # Called when the timer expires
         self.timer = None
         # Set an attribute that will be noticed in the collect_matches() loop
@@ -1108,7 +1115,7 @@ class TimeLimitCollector(WrappingCollector):
 
             os.kill(os.getpid(), signal.SIGALRM)
 
-    def _was_signaled(self, signum, frame):
+    def _was_signaled(self, signum: int, frame) -> None:
         raise TimeLimit
 
     def collect_matches(self) -> None:
@@ -1159,18 +1166,18 @@ class TermsCollector(WrappingCollector):
         print(tc.docterms)
     """
 
-    def __init__(self, child, settype=set):
+    def __init__(self, child: Collector, settype=set) -> None:
         self.child = child
         self.settype = settype
 
-    def prepare(self, top_searcher, q, context):
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         # This collector requires a valid matcher at each step
         self.child.prepare(top_searcher, q, context.set(needs_current=True))
 
         # A dictionary mapping (fieldname, text) pairs to arrays of docnums
-        self.termdocs = defaultdict(lambda: array("I"))
+        self.termdocs: defaultdict[Any, array] = defaultdict(lambda: array("I"))
         # A dictionary mapping docnums to lists of (fieldname, text) pairs
-        self.docterms = defaultdict(list)
+        self.docterms: defaultdict[int, list] = defaultdict(list)
 
     def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         WrappingCollector.set_subsearcher(self, subsearcher, offset)
