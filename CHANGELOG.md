@@ -6,6 +6,13 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.43.0] - 2026-08-22
+
+Completes the concrete-reader and collector scope of the public-API typing
+umbrella (#3), and ships three correctness fixes that typing surfaced along the
+way. No on-disk format change; runtime behaviour of the built-in readers and
+collectors is unchanged.
+
 ### Added
 - Type hints for the `MultiReader` and `EmptyReader` concrete readers in
   `whoosh.reading`, completing the concrete-reader scope of the public-API
