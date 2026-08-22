@@ -50,7 +50,9 @@ from whoosh.system import emptybytes
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
+    from whoosh.codec.base import Codec, Segment
     from whoosh.fields import Schema
+    from whoosh.filedb.filestore import Storage
     from whoosh.matching import Matcher
 
 # Exceptions
@@ -184,13 +186,13 @@ class IndexReader:
         self.close()
 
     @abstractmethod
-    def __contains__(self, term):
+    def __contains__(self, term: tuple[str, bytes]) -> bool:
         """Returns True if the given term tuple (fieldname, text) is
         in this reader.
         """
         raise NotImplementedError
 
-    def codec(self):
+    def codec(self) -> Codec | None:
         """Returns the :class:`whoosh.codec.base.Codec` object used to read
         this reader's segment. If this reader is not atomic
         (``reader.is_atomic() == True``), returns None.
@@ -198,7 +200,7 @@ class IndexReader:
 
         return None
 
-    def segment(self):
+    def segment(self) -> Segment | None:
         """Returns the :class:`whoosh.index.Segment` object used by this reader.
         If this reader is not atomic (``reader.is_atomic() == True``), returns
         None.
@@ -206,12 +208,12 @@ class IndexReader:
 
         return None
 
-    def segments(self):
+    def segments(self) -> list[Segment] | None:
         """Returns a list of :class:`whoosh.index.Segment` objects used by this reader."""
 
         return None
 
-    def storage(self):
+    def storage(self) -> Storage | None:
         """Returns the :class:`whoosh.filedb.filestore.Storage` object used by
         this reader to read its files. If the reader is not atomic,
         (``reader.is_atomic() == True``), returns None.
@@ -219,7 +221,7 @@ class IndexReader:
 
         return None
 
-    def is_atomic(self):
+    def is_atomic(self) -> bool:
         return True
 
     def _text_to_bytes(self, fieldname: str, text: str | bytes) -> bytes:
@@ -227,12 +229,12 @@ class IndexReader:
             raise TermNotFound((fieldname, text))
         return self.schema[fieldname].to_bytes(text)
 
-    def close(self):
+    def close(self) -> None:
         """Closes the open files associated with this reader."""
 
         pass
 
-    def generation(self):
+    def generation(self) -> int | None:
         """Returns the generation of the index being read, or -1 if the backend
         is not versioned.
         """
@@ -292,7 +294,7 @@ class IndexReader:
                 return
             yield btext
 
-    def field_terms(self, fieldname):
+    def field_terms(self, fieldname: str) -> Iterator[Any]:
         """Yields all term values (converted from on-disk bytes) in the given
         field.
         """
@@ -309,7 +311,7 @@ class IndexReader:
         for btext in fieldobj.sortable_terms(self, fieldname):
             yield from_bytes(btext)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         """Yields ((fieldname, text), terminfo) tuples for each term in the
         reader, in lexical order.
         """
@@ -318,7 +320,9 @@ class IndexReader:
         for term in self.all_terms():
             yield (term, term_info(*term))
 
-    def iter_from(self, fieldname, text):
+    def iter_from(
+        self, fieldname: str, text: str | bytes
+    ) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         """Yields ((fieldname, text), terminfo) tuples for all terms in the
         reader, starting at the given term.
         """
@@ -339,7 +343,9 @@ class IndexReader:
                 return
             yield text, terminfo
 
-    def iter_prefix(self, fieldname, prefix):
+    def iter_prefix(
+        self, fieldname: str, prefix: str | bytes
+    ) -> Iterator[tuple[bytes, TermInfo]]:
         """Yields (text, terminfo) tuples for all terms in the given field with
         a certain prefix.
         """
@@ -358,7 +364,7 @@ class IndexReader:
 
         raise NotImplementedError
 
-    def all_doc_ids(self):
+    def all_doc_ids(self) -> Iterator[int]:
         """Returns an iterator of all (undeleted) document IDs in the reader."""
 
         is_deleted = self.is_deleted
@@ -366,7 +372,7 @@ class IndexReader:
             docnum for docnum in range(self.doc_count_all()) if not is_deleted(docnum)
         )
 
-    def iter_docs(self):
+    def iter_docs(self) -> Iterator[tuple[int, dict[str, Any]]]:
         """Yields a series of ``(docnum, stored_fields_dict)``
         tuples for the undeleted documents in the reader.
         """
@@ -425,28 +431,30 @@ class IndexReader:
         raise NotImplementedError
 
     @abstractmethod
-    def field_length(self, fieldname):
+    def field_length(self, fieldname: str) -> int:
         """Returns the total number of terms in the given field. This is used
         by some scoring algorithms.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def min_field_length(self, fieldname):
+    def min_field_length(self, fieldname: str) -> int:
         """Returns the minimum length of the field across all documents. This
         is used by some scoring algorithms.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def max_field_length(self, fieldname):
+    def max_field_length(self, fieldname: str) -> int:
         """Returns the minimum length of the field across all documents. This
         is used by some scoring algorithms.
         """
         raise NotImplementedError
 
     @abstractmethod
-    def doc_field_length(self, docnum, fieldname, default=0):
+    def doc_field_length(
+        self, docnum: int, fieldname: str, default: int = 0
+    ) -> int:
         """Returns the number of terms in the given field in the given
         document. This is used by some scoring algorithms.
         """
@@ -463,7 +471,7 @@ class IndexReader:
             return p.id()
         raise TermNotFound((fieldname, text))
 
-    def iter_postings(self):
+    def iter_postings(self) -> Iterator[tuple[str, bytes, int, float, bytes]]:
         """Low-level method, yields all postings in the reader as
         ``(fieldname, text, docnum, weight, valuestring)`` tuples.
         """
@@ -499,7 +507,7 @@ class IndexReader:
         raise NotImplementedError
 
     @abstractmethod
-    def vector(self, docnum, fieldname, format_=None):
+    def vector(self, docnum: int, fieldname: str, format_=None) -> Matcher:
         """Returns a :class:`~whoosh.matching.Matcher` object for the
         given term vector.
 

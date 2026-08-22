@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- Completed type hints for the `IndexReader` abstract base class: 20 previously
+  unannotated methods now carry parameter and return types
+  (`codec`/`segment`/`segments`/`storage`, `is_atomic`, `close`, `generation`,
+  `field_terms`, `__iter__`/`iter_from`/`iter_prefix`, `all_doc_ids`/`iter_docs`,
+  `field_length`/`min_field_length`/`max_field_length`/`doc_field_length`,
+  `iter_postings`, `vector`, and `__contains__`). Finishes the base-class scope
+  of #97; `mypy` on `reading.py` introduces no new errors.
+
+### Fixed
+- Documentation: corrected two broken Pages links in `ROADMAP.md` (the MCP
+  Docker image and the LlamaIndex retriever landing page) that pointed to 404
+  URLs.
+
 ## [3.42.0] - 2026-08-21
 
 ### Added
