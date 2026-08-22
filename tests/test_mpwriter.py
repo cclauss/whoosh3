@@ -408,6 +408,52 @@ def test_mpwriter_explicit_start_method(start_method):
             assert len(r) == 15
 
 
+def test_mpwriter_default_path_under_nonfork_default():
+    # Forward-compat guard: when no start_method is passed, MpWriter uses the
+    # interpreter's *default* multiprocessing context. That default is "fork"
+    # on Linux today, but is already "spawn" on macOS/Windows and moves to
+    # "forkserver" on Linux in CPython 3.14. Verify the default (None) path --
+    # which drives each sub-writer via the SubWriterTask Process subclass --
+    # still commits correctly when the default context is not "fork". We run
+    # it in a subprocess so the process-global start method can be forced
+    # without disturbing the rest of the test session.
+    check_multi()
+
+    import multiprocessing
+    import subprocess
+    import sys
+
+    method = "forkserver"
+    if method not in multiprocessing.get_all_start_methods():
+        pytest.skip(f"{method} not available on this platform")
+
+    code = (
+        "import multiprocessing as mp, tempfile\n"
+        f"mp.set_start_method({method!r}, force=True)\n"
+        "from whoosh import fields\n"
+        "from whoosh.index import create_in\n"
+        "from whoosh.multiproc import MpWriter\n"
+        "schema = fields.Schema(id=fields.ID(stored=True), text=fields.TEXT(stored=True))\n"
+        "ix = create_in(tempfile.mkdtemp(), schema)\n"
+        "w = MpWriter(ix, procs=2, multisegment=False)\n"
+        "assert w.start_method is None\n"
+        "for i in range(20):\n"
+        "    w.add_document(id=str(i), text='doc %d hello' % i)\n"
+        "w.commit()\n"
+        "with ix.searcher() as s:\n"
+        "    assert s.doc_count() == 20\n"
+        "print('OK')\n"
+    )
+    proc = subprocess.run(
+        [sys.executable, "-c", code],
+        capture_output=True,
+        text=True,
+        timeout=180,
+    )
+    assert proc.returncode == 0, f"subprocess failed:\n{proc.stdout}\n{proc.stderr}"
+    assert "OK" in proc.stdout
+
+
 def test_mpwriter_default_start_method_unchanged():
     # With no start_method, behavior is unchanged: the default context is used
     # and SubWriterTask (a Process subclass) drives each sub-writer.

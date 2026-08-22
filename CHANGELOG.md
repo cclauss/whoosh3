@@ -6,6 +6,16 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Testing
+- Added a forward-compatibility regression test for `MpWriter` that runs the
+  default (`start_method=None`) indexing path under a non-`fork` default
+  multiprocessing context. The interpreter default is `fork` on Linux today
+  but is already `spawn` on macOS/Windows and becomes `forkserver` on Linux in
+  CPython 3.14; the test (run in a subprocess so the process-global start
+  method can be forced safely) confirms the `SubWriterTask`-driven default path
+  still commits correctly, locking in the guarantee that `procs=N` indexing
+  keeps working as CPython moves away from fork-by-default.
+
 ## [3.43.0] - 2026-08-22
 
 Completes the concrete-reader and collector scope of the public-API typing
