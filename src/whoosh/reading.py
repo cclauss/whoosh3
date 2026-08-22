@@ -51,9 +51,11 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
     from whoosh.codec.base import Codec, Segment
+    from whoosh.columns import ColumnReader
     from whoosh.fields import Schema
     from whoosh.filedb.filestore import Storage
     from whoosh.matching import Matcher
+    from whoosh.spelling import ReaderCorrector
 
 # Exceptions
 
@@ -524,7 +526,9 @@ class IndexReader:
         """
         raise NotImplementedError
 
-    def vector_as(self, astype, docnum, fieldname):
+    def vector_as(
+        self, astype: str, docnum: int, fieldname: str
+    ) -> Iterator[tuple[int, Any]]:
         """Returns an iterator of (termtext, value) pairs for the terms in the
         given term vector. This is a convenient shortcut to calling vector()
         and using the Matcher object when all you want are the terms and/or
@@ -549,12 +553,13 @@ class IndexReader:
                 vec.next()
         else:
             format_ = self.schema[fieldname].format
+            assert format_ is not None
             decoder = format_.decoder(astype)
             while vec.is_active():
                 yield (vec.id(), decoder(vec.value()))
                 vec.next()
 
-    def corrector(self, fieldname):
+    def corrector(self, fieldname: str) -> ReaderCorrector:
         """Returns a :class:`whoosh.spelling.Corrector` object that suggests
         corrections based on the terms in the given field.
         """
@@ -595,7 +600,9 @@ class IndexReader:
             if k <= maxdist:
                 yield word
 
-    def most_frequent_terms(self, fieldname, number=5, prefix=""):
+    def most_frequent_terms(
+        self, fieldname: str, number: int = 5, prefix: str | bytes = ""
+    ) -> list[tuple[float, bytes]]:
         """Returns the top 'number' most frequent terms in the given field as a
         list of (frequency, text) tuples.
         """
@@ -606,7 +613,9 @@ class IndexReader:
         )
         return nlargest(number, gen)
 
-    def most_distinctive_terms(self, fieldname, number=5, prefix=""):
+    def most_distinctive_terms(
+        self, fieldname: str, number: int = 5, prefix: str | bytes = ""
+    ) -> list[tuple[float, bytes]]:
         """Returns the top 'number' terms with the highest `tf*idf` scores as
         a list of (score, text) tuples.
         """
@@ -618,7 +627,7 @@ class IndexReader:
         )
         return nlargest(number, gen)
 
-    def leaf_readers(self):
+    def leaf_readers(self) -> list[tuple[IndexReader, int]]:
         """Returns a list of (IndexReader, docbase) pairs for the child readers
         of this reader if it is a composite reader. If this is not a composite
         reader, it returns `[(self, 0)]`.
@@ -626,13 +635,19 @@ class IndexReader:
 
         return [(self, 0)]
 
-    def supports_caches(self):
+    def supports_caches(self) -> bool:
         return False
 
-    def has_column(self, fieldname):
+    def has_column(self, fieldname: str) -> bool:
         return False
 
-    def column_reader(self, fieldname, column=None, reverse=False, translate=False):
+    def column_reader(
+        self,
+        fieldname: str,
+        column=None,
+        reverse: bool = False,
+        translate: bool = False,
+    ) -> ColumnReader:
         """
 
         :param fieldname: the name of the field for which to get a reader.

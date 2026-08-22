@@ -7,13 +7,18 @@ All notable changes to this project are documented here. This project follows
 ## [Unreleased]
 
 ### Added
-- Completed type hints for the `IndexReader` abstract base class: 20 previously
-  unannotated methods now carry parameter and return types
-  (`codec`/`segment`/`segments`/`storage`, `is_atomic`, `close`, `generation`,
-  `field_terms`, `__iter__`/`iter_from`/`iter_prefix`, `all_doc_ids`/`iter_docs`,
-  `field_length`/`min_field_length`/`max_field_length`/`doc_field_length`,
-  `iter_postings`, `vector`, and `__contains__`). Finishes the base-class scope
-  of #97; `mypy` on `reading.py` introduces no new errors.
+- Completed type hints for the `IndexReader` abstract base class, closing the
+  base-class scope of #97. Every method on the class now carries parameter and
+  return types, including the accessors (`codec`/`segment`/`segments`/`storage`,
+  `is_atomic`, `close`, `generation`), term/doc iteration
+  (`__iter__`/`iter_from`/`iter_prefix`, `field_terms`, `all_doc_ids`/`iter_docs`),
+  length accessors (`field_length`/`min_field_length`/`max_field_length`/
+  `doc_field_length`), postings/vectors (`iter_postings`, `vector`, `vector_as`),
+  spelling/analysis helpers (`corrector`, `most_frequent_terms`,
+  `most_distinctive_terms`), and the composite/column API (`leaf_readers`,
+  `supports_caches`, `has_column`, `column_reader`). `mypy` on `reading.py`
+  introduces no new errors and the reader/search/vector/spelling/column test
+  suites pass.
 
 ### Fixed
 - Documentation: corrected two broken Pages links in `ROADMAP.md` (the MCP
