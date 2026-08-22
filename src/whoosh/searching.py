@@ -1053,7 +1053,7 @@ class Results:
         self._facetmaps = facetmaps or {}
         self.runtime = runtime
         self.highlighter = highlighter or highlight.Highlighter()
-        self.collector = None
+        self.collector: Collector | None = None
         self._total = None
         self._char_cache = {}
 
@@ -1236,6 +1236,7 @@ class Results:
         """
 
         if self.docset is None:
+            assert self.collector is not None
             self.docset = set(self.collector.all_ids())
         return self.docset
 

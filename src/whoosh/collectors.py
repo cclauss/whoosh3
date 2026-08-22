@@ -60,7 +60,7 @@ documents just counts up the number of matches::
 
             self.count = 0
 
-        def collect(self, sub_docnum):
+        def collect(self, sub_docnum: int) -> Any:
             self.count += 1
 
     c = CountingCollector()
@@ -75,6 +75,8 @@ NOTE: collectors are not designed to be reentrant or thread-safe. It is
 generally a good idea to create a new collector for each search.
 """
 
+from __future__ import annotations
+
 import os
 import threading
 from abc import abstractmethod
@@ -82,15 +84,21 @@ from array import array
 from bisect import insort
 from collections import defaultdict
 from heapq import heapify, heappush, heapreplace
+from typing import TYPE_CHECKING, Any, Iterable, Iterator
 
 from whoosh import sorting
 from whoosh.searching import Results, TimeLimit
 from whoosh.util import now
 
+if TYPE_CHECKING:
+    from whoosh.matching import Matcher
+    from whoosh.query import Query
+    from whoosh.searching import SearchContext, Searcher
+
 # Functions
 
 
-def ilen(iterator):
+def ilen(iterator: Iterable[Any]) -> int:
     total = 0
     for _ in iterator:
         total += 1
@@ -103,7 +111,12 @@ def ilen(iterator):
 class Collector:
     """Base class for collectors."""
 
-    def prepare(self, top_searcher, q, context):
+    # Populated by scoring/sorting subclasses; a list of (score, docnum) items.
+    items: list
+
+    def prepare(
+        self, top_searcher: Searcher, q: Query, context: SearchContext
+    ) -> None:
         """This method is called before a search.
 
         Subclasses can override this to perform set-up work, but
@@ -133,10 +146,10 @@ class Collector:
         self.context = context
 
         self.starttime = now()
-        self.runtime = None
-        self.docset = set()
+        self.runtime: float | None = None
+        self.docset: set[int] = set()
 
-    def run(self):
+    def run(self) -> None:
         # Collect matches for each sub-searcher
         try:
             for subsearcher, offset in self.top_searcher.leaf_searchers():
@@ -145,7 +158,7 @@ class Collector:
         finally:
             self.finish()
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         """This method is called each time the collector starts on a new
         sub-searcher.
 
@@ -170,7 +183,7 @@ class Collector:
         self.offset = offset
         self.matcher = self.q.matcher(subsearcher, self.context)
 
-    def computes_count(self):
+    def computes_count(self) -> bool:
         """Returns True if the collector naturally computes the exact number of
         matching documents. Collectors that use block optimizations will return
         False since they might skip blocks containing matching documents.
@@ -182,7 +195,7 @@ class Collector:
 
         return True
 
-    def all_ids(self):
+    def all_ids(self) -> Iterable[int]:
         """Returns a sequence of docnums matched in this collector. (Only valid
         after the collector is run.)
 
@@ -192,7 +205,7 @@ class Collector:
 
         return self.docset
 
-    def count(self):
+    def count(self) -> int:
         """Returns the total number of documents matched in this collector.
         (Only valid after the collector is run.)
 
@@ -202,7 +215,7 @@ class Collector:
 
         return len(self.docset)
 
-    def collect_matches(self):
+    def collect_matches(self) -> None:
         """This method calls :meth:`Collector.matches` and then for each
         matched document calls :meth:`Collector.collect`. Sub-classes that
         want to intervene between finding matches and adding them to the
@@ -215,7 +228,7 @@ class Collector:
             collect(sub_docnum)
 
     @abstractmethod
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         """This method is called for every matched document. It should do the
         work of adding a matched document to the results, and it should return
         an object to use as a "sorting key" for the given document (such as the
@@ -237,7 +250,7 @@ class Collector:
         raise NotImplementedError
 
     @abstractmethod
-    def sort_key(self, sub_docnum):
+    def sort_key(self, sub_docnum: int) -> Any:
         """Returns a sorting key for the current match. This should return the
         same value returned by :meth:`Collector.collect`, but without the side
         effect of adding the current document to the results.
@@ -252,7 +265,7 @@ class Collector:
 
         raise NotImplementedError
 
-    def remove(self, global_docnum):
+    def remove(self, global_docnum: int) -> None:
         """Removes a document from the collector. Not that this method uses the
         global document number as opposed to :meth:`Collector.collect` which
         takes a segment-relative docnum.
@@ -265,13 +278,13 @@ class Collector:
                 return
         raise KeyError(global_docnum)
 
-    def _step_through_matches(self):
+    def _step_through_matches(self) -> Iterator[int]:
         matcher = self.matcher
         while matcher.is_active():
             yield matcher.id()
             matcher.next()
 
-    def matches(self):
+    def matches(self) -> Iterator[int]:
         """Yields a series of relative document numbers for matches
         in the current subsearcher.
         """
@@ -283,7 +296,7 @@ class Collector:
         else:
             return self.matcher.all_ids()
 
-    def finish(self):
+    def finish(self) -> None:
         """This method is called after a search.
 
         Subclasses can override this to perform set-up work, but
@@ -296,16 +309,16 @@ class Collector:
 
         self.runtime = now() - self.starttime
 
-    def _results(self, items, **kwargs):
+    def _results(self, items: list, **kwargs: Any) -> Results:
         # Fills in a Results object with the invariant information and the
         # given "items" (a list of (score, docnum) tuples)
         r = Results(self.top_searcher, self.q, items, **kwargs)
-        r.runtime = self.runtime
+        r.runtime = self.runtime if self.runtime is not None else 0.0
         r.collector = self
         return r
 
     @abstractmethod
-    def results(self):
+    def results(self) -> Results:
         """Returns a :class:`~ whoosh.searching.Results` object containing the
         results of the search. Subclasses must implement this method
         """
@@ -347,7 +360,7 @@ class ScoredCollector(Collector):
         # Number of blocks skipped by quality optimizations (for debugging)
         self.skipped_times = 0
 
-    def sort_key(self, sub_docnum):
+    def sort_key(self, sub_docnum: int) -> Any:
         return 0 - self.matcher.score()
 
     def _collect(self, global_docnum, score):
@@ -362,7 +375,7 @@ class ScoredCollector(Collector):
 
         return False
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         # Do common work to calculate score and top-level document number
         global_docnum = self.offset + sub_docnum
 
@@ -373,7 +386,7 @@ class ScoredCollector(Collector):
         # Call specialized method on subclass
         return self._collect(global_docnum, score)
 
-    def matches(self):
+    def matches(self) -> Iterator[int]:
         minscore = self.minscore
         matcher = self.matcher
         usequality = self._use_block_quality()
@@ -442,17 +455,17 @@ class TopCollector(ScoredCollector):
             and self.matcher.supports_block_quality()
         )
 
-    def computes_count(self):
+    def computes_count(self) -> bool:
         return not self._use_block_quality()
 
-    def all_ids(self):
+    def all_ids(self) -> Iterable[int]:
         # Since this collector can skip blocks, it doesn't track the total
         # number of matching documents, so if the user asks for all matched
         # docs we need to re-run the search using docs_for_query
 
         return self.top_searcher.docs_for_query(self.q)
 
-    def count(self):
+    def count(self) -> int:
         if self.computes_count():
             return self.total
         else:
@@ -482,7 +495,7 @@ class TopCollector(ScoredCollector):
         else:
             return 0
 
-    def remove(self, global_docnum):
+    def remove(self, global_docnum: int) -> None:
         negated = 0 - global_docnum
         items = self.items
 
@@ -496,7 +509,7 @@ class TopCollector(ScoredCollector):
                 self.minscore = items[0][0] if items else 0
                 return
 
-    def results(self):
+    def results(self) -> Results:
         # The items are stored (postive score, negative docnum) so the heap
         # keeps the highest scores and lowest docnums, in order from lowest to
         # highest. Since for the results we want the highest scores first,
@@ -522,7 +535,7 @@ class UnlimitedCollector(ScoredCollector):
         # Negate score to act as sort key so higher scores appear first
         return 0 - score
 
-    def results(self):
+    def results(self) -> Results:
         # Sort by negated scores so that higher scores go first, then by
         # document number to keep the order stable when documents have the
         # same score
@@ -561,21 +574,21 @@ class SortingCollector(Collector):
         # List of (sortkey, docnum) pairs
         self.items = []
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         Collector.set_subsearcher(self, subsearcher, offset)
         self.categorizer.set_searcher(subsearcher, offset)
 
-    def sort_key(self, sub_docnum):
+    def sort_key(self, sub_docnum: int) -> Any:
         return self.categorizer.key_for(self.matcher, sub_docnum)
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         global_docnum = self.offset + sub_docnum
         sortkey = self.sort_key(sub_docnum)
         self.items.append((sortkey, global_docnum))
         self.docset.add(global_docnum)
         return sortkey
 
-    def results(self):
+    def results(self) -> Results:
         items = self.items
         items.sort(reverse=self.reverse)
         if self.limit:
@@ -588,12 +601,12 @@ class UnsortedCollector(Collector):
         Collector.prepare(self, top_searcher, q, context.set(weighting=None))
         self.items = []
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         global_docnum = self.offset + sub_docnum
         self.items.append((None, global_docnum))
         self.docset.add(global_docnum)
 
-    def results(self):
+    def results(self) -> Results:
         items = self.items
         return self._results(items, docset=self.docset)
 
@@ -618,38 +631,38 @@ class WrappingCollector(Collector):
     def prepare(self, top_searcher, q, context):
         self.child.prepare(top_searcher, q, context)
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         self.child.set_subsearcher(subsearcher, offset)
         self.subsearcher = subsearcher
         self.matcher = self.child.matcher
         self.offset = self.child.offset
 
-    def all_ids(self):
+    def all_ids(self) -> Iterable[int]:
         return self.child.all_ids()
 
-    def count(self):
+    def count(self) -> int:
         return self.child.count()
 
-    def collect_matches(self):
+    def collect_matches(self) -> None:
         for sub_docnum in self.matches():
             self.collect(sub_docnum)
 
-    def sort_key(self, sub_docnum):
+    def sort_key(self, sub_docnum: int) -> Any:
         return self.child.sort_key(sub_docnum)
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         return self.child.collect(sub_docnum)
 
-    def remove(self, global_docnum):
+    def remove(self, global_docnum: int) -> None:
         return self.child.remove(global_docnum)
 
-    def matches(self):
+    def matches(self) -> Iterator[int]:
         return self.child.matches()
 
-    def finish(self):
+    def finish(self) -> None:
         self.child.finish()
 
-    def results(self):
+    def results(self) -> Results:
         return self.child.results()
 
 
@@ -708,7 +721,7 @@ class FilterCollector(WrappingCollector):
         self._restrict = ftc(restrict) if restrict else None
         self.filtered_count = 0
 
-    def all_ids(self):
+    def all_ids(self) -> Iterable[int]:
         child = self.child
 
         _allow = self._allow
@@ -721,14 +734,14 @@ class FilterCollector(WrappingCollector):
                 continue
             yield global_docnum
 
-    def count(self):
+    def count(self) -> int:
         child = self.child
         if child.computes_count():
             return child.count()
         else:
             return ilen(self.all_ids())
 
-    def matches(self):
+    def matches(self) -> Iterator[int]:
         # Apply the allow/restrict filter here (rather than only in
         # collect_matches) so that the filtering is honored even when an
         # *outer* wrapping collector iterates our matches directly. For
@@ -756,7 +769,7 @@ class FilterCollector(WrappingCollector):
                 continue
             yield sub_docnum
 
-    def collect_matches(self):
+    def collect_matches(self) -> None:
         # matches() already applies the allow/restrict filter and updates
         # filtered_count, so we can simply collect whatever it yields.
         child = self.child
@@ -764,7 +777,7 @@ class FilterCollector(WrappingCollector):
         for sub_docnum in self.matches():
             collect(sub_docnum)
 
-    def results(self):
+    def results(self) -> Results:
         r = self.child.results()
         r.collector = self
         r.filtered_count = self.filtered_count
@@ -827,14 +840,14 @@ class FacetCollector(WrappingCollector):
 
         self.child.prepare(top_searcher, q, context)
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         WrappingCollector.set_subsearcher(self, subsearcher, offset)
 
         # Tell each categorizer about the new subsearcher and offset
         for categorizer in self.categorizers.values():
             categorizer.set_searcher(self.child.subsearcher, self.child.offset)
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         matcher = self.child.matcher
         global_docnum = sub_docnum + self.child.offset
 
@@ -857,7 +870,7 @@ class FacetCollector(WrappingCollector):
 
         return sortkey
 
-    def results(self):
+    def results(self) -> Results:
         r = self.child.results()
         r._facetmaps = self.facetmaps
         return r
@@ -935,7 +948,7 @@ class CollapseCollector(WrappingCollector):
         )
         self.child.prepare(top_searcher, q, context.set(needs_current=needs_current))
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         WrappingCollector.set_subsearcher(self, subsearcher, offset)
 
         # Tell the keyer and (optional) orderer about the new subsearcher
@@ -943,10 +956,10 @@ class CollapseCollector(WrappingCollector):
         if self.orderer:
             self.orderer.set_searcher(subsearcher, offset)
 
-    def all_ids(self):
+    def all_ids(self) -> Iterable[int]:
         child = self.child
         limit = self.limit
-        counters = defaultdict(int)
+        counters: defaultdict[Any, int] = defaultdict(int)
 
         for subsearcher, offset in child.subsearchers():
             self.set_subsearcher(subsearcher, offset)
@@ -961,13 +974,13 @@ class CollapseCollector(WrappingCollector):
                         counters[ckey] += 1
                 yield offset + sub_docnum
 
-    def count(self):
+    def count(self) -> int:
         if self.child.computes_count():
             return self.child.count() - self.collapsed_total
         else:
             return ilen(self.all_ids())
 
-    def collect_matches(self):
+    def collect_matches(self) -> None:
         lists = self.lists
         limit = self.limit
         keyer = self.keyer
@@ -1015,7 +1028,7 @@ class CollapseCollector(WrappingCollector):
                     collapsed_counts[ckey] += 1
                     self.collapsed_total += 1
 
-    def results(self):
+    def results(self) -> Results:
         r = self.child.results()
         r.collapsed_counts = self.collapsed_counts
         return r
@@ -1098,7 +1111,7 @@ class TimeLimitCollector(WrappingCollector):
     def _was_signaled(self, signum, frame):
         raise TimeLimit
 
-    def collect_matches(self):
+    def collect_matches(self) -> None:
         child = self.child
         greedy = self.greedy
 
@@ -1115,7 +1128,7 @@ class TimeLimitCollector(WrappingCollector):
             if self.timedout:
                 raise TimeLimit
 
-    def finish(self):
+    def finish(self) -> None:
         if self.timer:
             self.timer.cancel()
         self.timer = None
@@ -1159,13 +1172,13 @@ class TermsCollector(WrappingCollector):
         # A dictionary mapping docnums to lists of (fieldname, text) pairs
         self.docterms = defaultdict(list)
 
-    def set_subsearcher(self, subsearcher, offset):
+    def set_subsearcher(self, subsearcher: Searcher, offset: int) -> None:
         WrappingCollector.set_subsearcher(self, subsearcher, offset)
 
         # Store a list of all the term matchers in the matcher tree
         self.termmatchers = list(self.child.matcher.term_matchers())
 
-    def collect(self, sub_docnum):
+    def collect(self, sub_docnum: int) -> Any:
         child = self.child
         termdocs = self.termdocs
         docterms = self.docterms
@@ -1183,7 +1196,7 @@ class TermsCollector(WrappingCollector):
                 termdocs[term].append(global_docnum)
                 docterms[global_docnum].append(term)
 
-    def results(self):
+    def results(self) -> Results:
         r = self.child.results()
         r.termdocs = dict(self.termdocs)
         r.docterms = dict(self.docterms)
