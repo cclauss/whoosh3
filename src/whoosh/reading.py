@@ -664,7 +664,14 @@ class IndexReader:
 
 
 class SegmentReader(IndexReader):
-    def __init__(self, storage, schema, segment, generation=None, codec=None):
+    def __init__(
+        self,
+        storage: Storage,
+        schema: Schema,
+        segment: Segment,
+        generation: int | None = None,
+        codec: Codec | None = None,
+    ) -> None:
         self.schema = schema
         self.is_closed = False
 
@@ -681,7 +688,7 @@ class SegmentReader(IndexReader):
             # Use an overlay here instead of just the compound storage, in rare
             # circumstances a segment file may be added after the segment is
             # written
-            self._storage = OverlayStorage(files, storage)
+            self._storage: Storage = OverlayStorage(files, storage)
         else:
             self._storage = storage
 
@@ -690,45 +697,45 @@ class SegmentReader(IndexReader):
         self._terms = self._codec.terms_reader(self._storage, segment)
         self._perdoc = self._codec.per_document_reader(self._storage, segment)
 
-    def codec(self):
+    def codec(self) -> Codec | None:
         return self._codec
 
-    def segment(self):
+    def segment(self) -> Segment | None:
         return self._segment
 
-    def segments(self):
-        return [self.segment()]
+    def segments(self) -> list[Segment] | None:
+        return [self._segment]
 
-    def storage(self):
+    def storage(self) -> Storage | None:
         return self._storage
 
-    def has_deletions(self):
+    def has_deletions(self) -> bool:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.has_deletions()
 
-    def doc_count(self):
+    def doc_count(self) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.doc_count()
 
-    def doc_count_all(self):
+    def doc_count_all(self) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.doc_count_all()
 
-    def is_deleted(self, docnum):
+    def is_deleted(self, docnum: int) -> bool:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.is_deleted(docnum)
 
-    def generation(self):
+    def generation(self) -> int | None:
         return self._gen
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self._storage!r}, {self._segment!r})"
 
-    def __contains__(self, term):
+    def __contains__(self, term: tuple[str, bytes]) -> bool:
         if self.is_closed:
             raise ReaderClosed
         fieldname, text = term
@@ -737,7 +744,7 @@ class SegmentReader(IndexReader):
         text = self._text_to_bytes(fieldname, text)
         return (fieldname, text) in self._terms
 
-    def close(self):
+    def close(self) -> None:
         if self.is_closed:
             raise ReaderClosed("Reader already closed")
         self._terms.close()
@@ -750,7 +757,7 @@ class SegmentReader(IndexReader):
 
         self.is_closed = True
 
-    def stored_fields(self, docnum):
+    def stored_fields(self, docnum: int) -> dict[str, Any]:
         if self.is_closed:
             raise ReaderClosed
         assert docnum >= 0
@@ -761,49 +768,49 @@ class SegmentReader(IndexReader):
 
     # Delegate doc methods to the per-doc reader
 
-    def all_doc_ids(self):
+    def all_doc_ids(self) -> Iterator[int]:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.all_doc_ids()
 
-    def iter_docs(self):
+    def iter_docs(self) -> Iterator[tuple[int, dict[str, Any]]]:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.iter_docs()
 
-    def all_stored_fields(self):
+    def all_stored_fields(self) -> Iterable[dict[str, Any]]:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.all_stored_fields()
 
-    def field_length(self, fieldname):
+    def field_length(self, fieldname: str) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.field_length(fieldname)
 
-    def min_field_length(self, fieldname):
+    def min_field_length(self, fieldname: str) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.min_field_length(fieldname)
 
-    def max_field_length(self, fieldname):
+    def max_field_length(self, fieldname: str) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.max_field_length(fieldname)
 
-    def doc_field_length(self, docnum, fieldname, default=0):
+    def doc_field_length(self, docnum: int, fieldname: str, default: int = 0) -> int:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.doc_field_length(docnum, fieldname, default)
 
-    def has_vector(self, docnum, fieldname):
+    def has_vector(self, docnum: int, fieldname: str) -> bool:
         if self.is_closed:
             raise ReaderClosed
         return self._perdoc.has_vector(docnum, fieldname)
 
     #
 
-    def _test_field(self, fieldname):
+    def _test_field(self, fieldname: str) -> None:
         if self.is_closed:
             raise ReaderClosed
         if fieldname not in self.schema:
@@ -811,10 +818,10 @@ class SegmentReader(IndexReader):
         if self.schema[fieldname].format is None:
             raise TermNotFound(f"Field {fieldname!r} is not indexed")
 
-    def indexed_field_names(self):
+    def indexed_field_names(self) -> Iterable[str]:
         return self._terms.indexed_field_names()
 
-    def all_terms(self):
+    def all_terms(self) -> Iterable[tuple[str, bytes]]:
         if self.is_closed:
             raise ReaderClosed
         schema = self.schema
@@ -824,7 +831,7 @@ class SegmentReader(IndexReader):
             if fieldname in schema
         )
 
-    def terms_from(self, fieldname, prefix):
+    def terms_from(self, fieldname: str, prefix: bytes) -> Iterable[tuple[str, bytes]]:
         self._test_field(fieldname)
         prefix = self._text_to_bytes(fieldname, prefix)
         schema = self.schema
@@ -834,7 +841,7 @@ class SegmentReader(IndexReader):
             if fname in schema
         )
 
-    def term_info(self, fieldname, text):
+    def term_info(self, fieldname: str, text: str | bytes) -> TermInfo:
         self._test_field(fieldname)
         text = self._text_to_bytes(fieldname, text)
         try:
@@ -842,16 +849,16 @@ class SegmentReader(IndexReader):
         except KeyError:
             raise TermNotFound(f"{fieldname}:{text!r}")
 
-    def expand_prefix(self, fieldname, prefix):
+    def expand_prefix(self, fieldname: str, prefix: str | bytes) -> Iterable[bytes]:
         self._test_field(fieldname)
         prefix = self._text_to_bytes(fieldname, prefix)
         return IndexReader.expand_prefix(self, fieldname, prefix)
 
-    def lexicon(self, fieldname):
+    def lexicon(self, fieldname: str) -> Iterable[bytes]:
         self._test_field(fieldname)
         return IndexReader.lexicon(self, fieldname)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         if self.is_closed:
             raise ReaderClosed
         schema = self.schema
@@ -861,7 +868,7 @@ class SegmentReader(IndexReader):
             if term[0] in schema
         )
 
-    def iter_from(self, fieldname, text):
+    def iter_from(self, fieldname: str, text: str | bytes) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         self._test_field(fieldname)
         schema = self.schema
         text = self._text_to_bytes(fieldname, text)
@@ -870,7 +877,7 @@ class SegmentReader(IndexReader):
                 continue
             yield (term, terminfo)
 
-    def frequency(self, fieldname, text):
+    def frequency(self, fieldname: str, text: str | bytes) -> int:
         self._test_field(fieldname)
         text = self._text_to_bytes(fieldname, text)
         try:
@@ -878,7 +885,7 @@ class SegmentReader(IndexReader):
         except KeyError:
             return 0
 
-    def doc_frequency(self, fieldname, text):
+    def doc_frequency(self, fieldname: str, text: str | bytes) -> int:
         self._test_field(fieldname)
         text = self._text_to_bytes(fieldname, text)
         try:
@@ -887,10 +894,10 @@ class SegmentReader(IndexReader):
             return 0
 
     @cached_property
-    def deleted_docs_set(self):
+    def deleted_docs_set(self) -> frozenset[int]:
         return frozenset(self._perdoc.deleted_docs())
 
-    def postings(self, fieldname, text, scorer=None):
+    def postings(self, fieldname: str, text: str | bytes, scorer=None) -> Matcher:
         from whoosh.matching.wrappers import FilterMatcher
 
         if self.is_closed:
@@ -905,7 +912,7 @@ class SegmentReader(IndexReader):
             matcher = FilterMatcher(matcher, deleted, exclude=True)
         return matcher
 
-    def vector(self, docnum, fieldname, format_=None):
+    def vector(self, docnum: int, fieldname: str, format_=None) -> Matcher:
         if self.is_closed:
             raise ReaderClosed
         if fieldname not in self.schema:
@@ -915,13 +922,13 @@ class SegmentReader(IndexReader):
             raise Exception(f"No vectors are stored for field {fieldname!r}")
         return self._perdoc.vector(docnum, fieldname, vformat)
 
-    def cursor(self, fieldname):
+    def cursor(self, fieldname: str):
         if self.is_closed:
             raise ReaderClosed
         fieldobj = self.schema[fieldname]
         return self._terms.cursor(fieldname, fieldobj)
 
-    def terms_within(self, fieldname, text, maxdist, prefix=0):
+    def terms_within(self, fieldname: str, text: str, maxdist: int, prefix: int = 0) -> Iterable[str]:
         # Replaces the horribly inefficient base implementation with one based
         # on skipping through the word list efficiently using a DFA
 
@@ -933,13 +940,15 @@ class SegmentReader(IndexReader):
 
     # Column methods
 
-    def has_column(self, fieldname):
+    def has_column(self, fieldname: str) -> bool:
         if self.is_closed:
             raise ReaderClosed
         coltype = self.schema[fieldname].column_type
-        return coltype and self._perdoc.has_column(fieldname)
+        return bool(coltype) and self._perdoc.has_column(fieldname)
 
-    def column_reader(self, fieldname, column=None, reverse=False, translate=True):
+    def column_reader(
+        self, fieldname: str, column=None, reverse: bool = False, translate: bool = True
+    ) -> ColumnReader:
         if self.is_closed:
             raise ReaderClosed
 

@@ -7,6 +7,13 @@ All notable changes to this project are documented here. This project follows
 ## [Unreleased]
 
 ### Added
+- Type hints for the `SegmentReader` concrete reader in `whoosh.reading` (the
+  reader you get from `ix.reader()` on a single-segment index), completing the
+  primary concrete-reader scope under the public-API typing umbrella (#3).
+  Every method now mirrors the already-typed `IndexReader` base contract:
+  the accessors, term/doc iteration, length and postings/vector accessors,
+  and the column API. `mypy` on `reading.py` stays clean and the
+  reader/search/column/vector suites pass.
 - Completed type hints for the `IndexReader` abstract base class, closing the
   base-class scope of #97. Every method on the class now carries parameter and
   return types, including the accessors (`codec`/`segment`/`segments`/`storage`,
@@ -30,6 +37,11 @@ All notable changes to this project are documented here. This project follows
   `collectors.py` is now fully clean (0 errors).
 
 ### Fixed
+- `SegmentReader.has_column()` returned the field's `Column` object (or `None`)
+  rather than a strict `bool`, contradicting its declared `-> bool` contract on
+  the `IndexReader` base class. Callers only used it for truthiness so behaviour
+  was unchanged, but the method now returns a real `bool`. Surfaced by typing
+  the concrete reader against the base contract.
 - `CollapseCollector.all_ids()` iterated `child.subsearchers()`, but a
   `Collector` has no `subsearchers()` method (`subsearchers` is an attribute of
   a `Searcher`), so calling `all_ids()` on a collapse collector raised
