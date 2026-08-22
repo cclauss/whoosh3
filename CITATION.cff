@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: "If you use Whoosh (the whoosh3 distribution) in your work, please cite it using the metadata below."
+title: "Whoosh: a fast, pure-Python full-text indexing and search library"
+type: software
+abstract: >-
+  Whoosh is a fast, featureful, pure-Python full-text indexing and search
+  library. It was originally created by Matt Chaput, maintained for a time by
+  the whoosh-community organization and later revived as whoosh-reloaded, and
+  is now maintained under the whoosh3 distribution on PyPI with support for
+  modern Python versions.
+authors:
+  - family-names: Chaput
+    given-names: Matt
+  - name: "Priya Sundaram"
+  - name: "The Whoosh community and prior contributors"
+license: BSD-2-Clause
+repository-code: "https://github.com/priya-sundaram-dev/whoosh"
+url: "https://priya-sundaram-dev.github.io/whoosh/"
+keywords:
+  - "full-text search"
+  - "information retrieval"
+  - "indexing"
+  - "BM25"
+  - "pure-python"
+  - "search-engine"
