@@ -7,6 +7,15 @@ All notable changes to this project are documented here. This project follows
 ## [Unreleased]
 
 ### Added
+- Type hints for the `MultiReader` and `EmptyReader` concrete readers in
+  `whoosh.reading`, completing the concrete-reader scope of the public-API
+  typing umbrella (#3): every method on the multi-segment reader (returned by
+  `ix.reader()` when an index has more than one segment) and the empty-index
+  reader now carries parameter and return types that mirror the `IndexReader`
+  base contract. Also added `IndexReader.cursor()` to the base class so
+  `cursor` is part of the documented, type-checked reader interface (all
+  concrete readers already implemented it). `mypy` on `reading.py` is clean and
+  the reader/search/column suites pass (854 tests).
 - Type hints for the `SegmentReader` concrete reader in `whoosh.reading` (the
   reader you get from `ix.reader()` on a single-segment index), completing the
   primary concrete-reader scope under the public-API typing umbrella (#3).

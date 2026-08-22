@@ -35,7 +35,7 @@ from bisect import bisect_right
 from functools import cached_property
 from heapq import heapify, heappop, heapreplace, nlargest
 from math import log
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from whoosh import columns
 from whoosh.filedb.filestore import OverlayStorage
@@ -46,10 +46,11 @@ from whoosh.system import emptybytes
 if TYPE_CHECKING:
     from collections.abc import Iterable, Iterator
 
-    from whoosh.codec.base import Codec, Segment
+    from whoosh.codec.base import Codec, FieldCursor, Segment
     from whoosh.columns import ColumnReader
     from whoosh.fields import Schema
     from whoosh.filedb.filestore import Storage
+    from whoosh.formats import Format
     from whoosh.matching import Matcher
     from whoosh.spelling import ReaderCorrector
 
@@ -221,6 +222,15 @@ class IndexReader:
 
     def is_atomic(self) -> bool:
         return True
+
+    def cursor(self, fieldname: str) -> FieldCursor:
+        """Returns a :class:`whoosh.codec.base.FieldCursor` object for
+        navigating the terms in the given field. Concrete readers override
+        this; the base contract exists so type checkers and third-party
+        subclasses see ``cursor`` as part of the reader interface.
+        """
+
+        raise NotImplementedError(self.__class__.__name__)
 
     def _text_to_bytes(self, fieldname: str, text: str | bytes) -> bytes:
         if fieldname not in self.schema:
@@ -980,94 +990,106 @@ class SegmentReader(IndexReader):
 
 
 class EmptyReader(IndexReader):
-    def __init__(self, schema):
+    def __init__(self, schema: Schema):
         self.schema = schema
 
-    def __contains__(self, term):
+    def __contains__(self, term: tuple[str, bytes]) -> bool:
         return False
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         return iter([])
 
-    def segments(self):
+    def segments(self) -> list[Segment] | None:
         return None
 
-    def cursor(self, fieldname):
+    def cursor(self, fieldname: str) -> FieldCursor:
         from whoosh.codec.base import EmptyCursor
 
         return EmptyCursor()
 
-    def indexed_field_names(self):
+    def indexed_field_names(self) -> Iterable[str]:
         return []
 
-    def all_terms(self):
+    def all_terms(self) -> Iterable[tuple[str, bytes]]:
         return iter([])
 
-    def term_info(self, fieldname, text):
+    def term_info(self, fieldname: str, text: str | bytes) -> TermInfo:
         raise TermNotFound((fieldname, text))
 
-    def iter_from(self, fieldname, text):
+    def iter_from(
+        self, fieldname: str, text: str | bytes
+    ) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         return iter([])
 
-    def iter_field(self, fieldname, prefix=""):
+    def iter_field(
+        self, fieldname: str, prefix: str | bytes = ""
+    ) -> Iterator[tuple[bytes, TermInfo]]:
         return iter([])
 
-    def iter_prefix(self, fieldname, prefix=""):
+    def iter_prefix(
+        self, fieldname: str, prefix: str | bytes = ""
+    ) -> Iterator[tuple[bytes, TermInfo]]:
         return iter([])
 
-    def lexicon(self, fieldname):
+    def lexicon(self, fieldname: str) -> Iterable[bytes]:
         return iter([])
 
-    def has_deletions(self):
+    def has_deletions(self) -> bool:
         return False
 
-    def is_deleted(self, docnum):
+    def is_deleted(self, docnum: int) -> bool:
         return False
 
-    def stored_fields(self, docnum):
+    def stored_fields(self, docnum: int) -> dict[str, Any]:
         raise KeyError(f"No document number {docnum}")
 
-    def all_stored_fields(self):
+    def all_stored_fields(self) -> Iterable[dict[str, Any]]:
         return iter([])
 
-    def doc_count_all(self):
+    def doc_count_all(self) -> int:
         return 0
 
-    def doc_count(self):
+    def doc_count(self) -> int:
         return 0
 
-    def frequency(self, fieldname, text):
+    def frequency(self, fieldname: str, text: str | bytes) -> int:
         return 0
 
-    def doc_frequency(self, fieldname, text):
+    def doc_frequency(self, fieldname: str, text: str | bytes) -> int:
         return 0
 
-    def field_length(self, fieldname):
+    def field_length(self, fieldname: str) -> int:
         return 0
 
-    def min_field_length(self, fieldname):
+    def min_field_length(self, fieldname: str) -> int:
         return 0
 
-    def max_field_length(self, fieldname):
+    def max_field_length(self, fieldname: str) -> int:
         return 0
 
-    def doc_field_length(self, docnum, fieldname, default=0):
+    def doc_field_length(
+        self, docnum: int, fieldname: str, default: int = 0
+    ) -> int:
         return default
 
-    def postings(self, fieldname, text, scorer=None):
+    def postings(self, fieldname: str, text: str | bytes, scorer=None) -> Matcher:
         raise TermNotFound(f"{fieldname}:{text!r}")
 
-    def has_vector(self, docnum, fieldname):
+    def has_vector(self, docnum: int, fieldname: str) -> bool:
         return False
 
-    def vector(self, docnum, fieldname, format_=None):
+    def vector(self, docnum: int, fieldname: str, format_=None) -> Matcher:
         raise KeyError(f"No document number {docnum}")
 
-    def most_frequent_terms(self, fieldname, number=5, prefix=""):
-        return iter([])
+    def most_frequent_terms(
+        self, fieldname: str, number: int = 5, prefix: str | bytes = ""
+    ) -> list[tuple[float, bytes]]:
+        return []
 
-    def most_distinctive_terms(self, fieldname, number=5, prefix=None):
-        return iter([])
+    def most_distinctive_terms(
+        self, fieldname: str, number: int = 5, prefix: str | bytes = ""
+    ) -> list[tuple[float, bytes]]:
+        return []
 
 
 # Multisegment reader class
@@ -1076,14 +1098,19 @@ class EmptyReader(IndexReader):
 class MultiReader(IndexReader):
     """Do not instantiate this object directly. Instead use Index.reader()."""
 
-    def __init__(self, readers, generation=None):
+    def __init__(
+        self, readers: list[IndexReader], generation: int | None = None
+    ):
         self.readers = readers
         self._gen = generation
-        self.schema = None
+        # An empty MultiReader (no sub-readers) has no schema; the common case
+        # takes the schema from the first sub-reader. The base class declares
+        # ``schema: Schema`` for the normal (non-empty) contract.
+        self.schema = None  # type: ignore[assignment]
         if readers:
             self.schema = readers[0].schema
 
-        self.doc_offsets = []
+        self.doc_offsets: list[int] = []
         self.base = 0
         for r in self.readers:
             self.doc_offsets.append(self.base)
@@ -1091,59 +1118,65 @@ class MultiReader(IndexReader):
 
         self.is_closed = False
 
-    def _document_segment(self, docnum):
+    def _document_segment(self, docnum: int) -> int:
         return max(0, bisect_right(self.doc_offsets, docnum) - 1)
 
-    def _segment_and_docnum(self, docnum):
+    def _segment_and_docnum(self, docnum: int) -> tuple[int, int]:
         segmentnum = self._document_segment(docnum)
         offset = self.doc_offsets[segmentnum]
         return segmentnum, docnum - offset
 
-    def cursor(self, fieldname):
-        return MultiCursor([r.cursor(fieldname) for r in self.readers])
+    def cursor(self, fieldname: str) -> FieldCursor:
+        return cast(
+            "FieldCursor", MultiCursor([r.cursor(fieldname) for r in self.readers])
+        )
 
-    def segments(self):
+    def segments(self) -> list[Segment] | None:
         return [
-            reader.segment() for reader in self.readers if reader.segment() is not None
+            seg
+            for seg in (reader.segment() for reader in self.readers)
+            if seg is not None
         ]
 
-    def is_atomic(self):
+    def is_atomic(self) -> bool:
         return False
 
-    def leaf_readers(self):
+    def leaf_readers(self) -> list[tuple[IndexReader, int]]:
         return list(zip(self.readers, self.doc_offsets))
 
-    def add_reader(self, reader):
+    def add_reader(self, reader: IndexReader) -> None:
         self.readers.append(reader)
         self.doc_offsets.append(self.base)
         self.base += reader.doc_count_all()
 
-    def close(self):
+    def close(self) -> None:
         for d in self.readers:
             d.close()
         self.is_closed = True
 
-    def generation(self):
+    def generation(self) -> int | None:
         return self._gen
 
-    def format(self, fieldname):
+    def format(self, fieldname: str) -> Format | None:
         for r in self.readers:
-            fmt = r.format(fieldname)
+            fmt = cast("Any", r).format(fieldname)
             if fmt is not None:
                 return fmt
+        return None
 
-    def vector_format(self, fieldname):
+    def vector_format(self, fieldname: str) -> Format | None:
         for r in self.readers:
-            vfmt = r.vector_format(fieldname)
+            vfmt = cast("Any", r).vector_format(fieldname)
             if vfmt is not None:
                 return vfmt
+        return None
 
     # Term methods
 
-    def __contains__(self, term):
+    def __contains__(self, term: tuple[str, bytes]) -> bool:
         return any(r.__contains__(term) for r in self.readers)
 
-    def _merge_terms(self, iterlist):
+    def _merge_terms(self, iterlist: list[Iterator[Any]]) -> Iterator[Any]:
         # Merge-sorts terms coming from a list of term iterators.
 
         # Create a map so we can look up each iterator by its id() value
@@ -1191,22 +1224,24 @@ class MultiReader(IndexReader):
             # Yield the term
             yield term
 
-    def indexed_field_names(self):
-        names = set()
+    def indexed_field_names(self) -> Iterable[str]:
+        names: set[str] = set()
         for r in self.readers:
             names.update(r.indexed_field_names())
         return iter(names)
 
-    def all_terms(self):
-        return self._merge_terms([r.all_terms() for r in self.readers])
+    def all_terms(self) -> Iterable[tuple[str, bytes]]:
+        return self._merge_terms([iter(r.all_terms()) for r in self.readers])
 
-    def terms_from(self, fieldname, prefix):
+    def terms_from(
+        self, fieldname: str, prefix: bytes
+    ) -> Iterable[tuple[str, bytes]]:
         return self._merge_terms(
-            [r.terms_from(fieldname, prefix) for r in self.readers]
+            [iter(r.terms_from(fieldname, prefix)) for r in self.readers]
         )
 
-    def term_info(self, fieldname, text):
-        term = (fieldname, text)
+    def term_info(self, fieldname: str, text: str | bytes) -> TermInfo:
+        term = cast("tuple[str, bytes]", (fieldname, text))
 
         # Get the term infos for the sub-readers containing the term
         tis = [
@@ -1222,18 +1257,18 @@ class MultiReader(IndexReader):
 
         return combine_terminfos(tis)
 
-    def frequency(self, fieldname, text):
+    def frequency(self, fieldname: str, text: str | bytes) -> int:
         return sum(r.frequency(fieldname, text) for r in self.readers)
 
-    def doc_frequency(self, fieldname, text):
+    def doc_frequency(self, fieldname: str, text: str | bytes) -> int:
         return sum(r.doc_frequency(fieldname, text) for r in self.readers)
 
-    def postings(self, fieldname, text):
+    def postings(self, fieldname: str, text: str | bytes) -> Matcher:
         # This method does not add a scorer; for that, use Searcher.postings()
 
         postreaders = []
         docoffsets = []
-        term = (fieldname, text)
+        term = cast("tuple[str, bytes]", (fieldname, text))
 
         for i, r in enumerate(self.readers):
             if term in r:
@@ -1247,7 +1282,7 @@ class MultiReader(IndexReader):
 
         return MultiMatcher(postreaders, docoffsets)
 
-    def first_id(self, fieldname, text):
+    def first_id(self, fieldname: str, text: str | bytes) -> int:
         for i, r in enumerate(self.readers):
             try:
                 id = r.first_id(fieldname, text)
@@ -1263,23 +1298,29 @@ class MultiReader(IndexReader):
 
     # Deletion methods
 
-    def has_deletions(self):
+    def has_deletions(self) -> bool:
         return any(r.has_deletions() for r in self.readers)
 
-    def is_deleted(self, docnum):
+    def is_deleted(self, docnum: int) -> bool:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         return self.readers[segmentnum].is_deleted(segmentdoc)
 
-    def stored_fields(self, docnum):
+    def stored_fields(self, docnum: int) -> dict[str, Any]:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         return self.readers[segmentnum].stored_fields(segmentdoc)
 
     # Columns
 
-    def has_column(self, fieldname):
+    def has_column(self, fieldname: str) -> bool:
         return any(r.has_column(fieldname) for r in self.readers)
 
-    def column_reader(self, fieldname, column=None, reverse=False, translate=True):
+    def column_reader(
+        self,
+        fieldname: str,
+        column=None,
+        reverse: bool = False,
+        translate: bool = True,
+    ) -> ColumnReader:
         crs = []
         doc_offsets = []
         for i, r in enumerate(self.readers):
@@ -1293,39 +1334,43 @@ class MultiReader(IndexReader):
 
     # Per doc methods
 
-    def all_stored_fields(self):
+    def all_stored_fields(self) -> Iterable[dict[str, Any]]:
         for reader in self.readers:
             yield from reader.all_stored_fields()
 
-    def doc_count_all(self):
+    def doc_count_all(self) -> int:
         return sum(dr.doc_count_all() for dr in self.readers)
 
-    def doc_count(self):
+    def doc_count(self) -> int:
         return sum(dr.doc_count() for dr in self.readers)
 
-    def field_length(self, fieldname):
+    def field_length(self, fieldname: str) -> int:
         return sum(dr.field_length(fieldname) for dr in self.readers)
 
-    def min_field_length(self, fieldname):
+    def min_field_length(self, fieldname: str) -> int:
         return min(r.min_field_length(fieldname) for r in self.readers)
 
-    def max_field_length(self, fieldname):
+    def max_field_length(self, fieldname: str) -> int:
         return max(r.max_field_length(fieldname) for r in self.readers)
 
-    def doc_field_length(self, docnum, fieldname, default=0):
+    def doc_field_length(
+        self, docnum: int, fieldname: str, default: int = 0
+    ) -> int:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         reader = self.readers[segmentnum]
         return reader.doc_field_length(segmentdoc, fieldname, default=default)
 
-    def has_vector(self, docnum, fieldname):
+    def has_vector(self, docnum: int, fieldname: str) -> bool:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         return self.readers[segmentnum].has_vector(segmentdoc, fieldname)
 
-    def vector(self, docnum, fieldname, format_=None):
+    def vector(self, docnum: int, fieldname: str, format_=None) -> Matcher:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         return self.readers[segmentnum].vector(segmentdoc, fieldname)
 
-    def vector_as(self, astype, docnum, fieldname):
+    def vector_as(
+        self, astype: str, docnum: int, fieldname: str
+    ) -> Iterator[tuple[int, Any]]:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         return self.readers[segmentnum].vector_as(astype, segmentdoc, fieldname)
 
