@@ -331,6 +331,16 @@ If you have both ``Whoosh`` and ``whoosh3`` installed at once they collide on
 the shared ``whoosh`` import name; uninstall the old one
 (``pip uninstall Whoosh``) so only whoosh3 provides the module.
 
+**Verified working stack.** The full index → update → search loop (a
+``SearchIndex`` writing through ``WhooshSearchBackend`` and querying back) has
+been run end-to-end on ``django-haystack`` 3.4.0 with ``whoosh3`` 3.42.0 on
+Django 6.1 and Python 3.12 — no code changes, no shims. Every ``whoosh``
+sub-module the backend imports (``index``, ``analysis``, ``fields``,
+``filedb.filestore``, ``highlight``, ``qparser``, ``searching``, ``sorting``,
+``writing``, and even the vendored ``whoosh.support.relativedelta``) resolves
+under whoosh3, and ``whoosh.__version__`` is the ``(3, 42, 0)`` tuple Haystack's
+``>= (2, 5, 0)`` guard expects.
+
 
 Whoosh vs. SQLite FTS5 and other options
 =========================================
