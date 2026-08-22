@@ -15,6 +15,11 @@ All notable changes to this project are documented here. This project follows
   method can be forced safely) confirms the `SubWriterTask`-driven default path
   still commits correctly, locking in the guarantee that `procs=N` indexing
   keeps working as CPython moves away from fork-by-default.
+- Added `tests/test_examples_runnable.py`, a smoke test that runs the
+  dependency-free, no-argument `examples/*.py` scripts (including the front-door
+  `quickstart.py` and `tutorial.py`) end to end in a throwaway directory and
+  asserts a clean exit. Nothing previously guarded these copy-paste examples, so
+  an API refactor could have silently broken the project's own onboarding code.
 
 ## [3.43.0] - 2026-08-22
 
