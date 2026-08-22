@@ -159,8 +159,32 @@ About section of the README.)*
       and the `IndexReader` context-manager methods (gh#98, by
       [@Muhammad08-dot](https://github.com/Muhammad08-dot)) are now annotated,
       each guarded by the `mypy` smoke job. Types are correct-only, never
-      fabricated. `whoosh.reading` and `whoosh.collectors` remain open as
-      good-first-issues for the next contributors (gh#97, gh#92).
+      fabricated. `whoosh.reading` and `whoosh.collectors` were the last two
+      storage/read-layer modules left open here; both were completed in 3.43.0
+      (see below).
+
+## Done (3.43.0 — released 2026-08-22)
+
+- [x] **Concrete-reader and collector typing scope complete (gh#3).** The
+      public reader and collector API is now fully annotated end-to-end. This
+      release typed the two concrete multi-/empty-index readers in
+      `whoosh.reading` — `MultiReader` (returned by `ix.reader()` when an index
+      has more than one segment) and `EmptyReader` — so that, together with the
+      already-typed `IndexReader` base and `SegmentReader`, every built-in
+      reader mirrors the base contract. `whoosh.collectors` — the `Collector`
+      base and the `ScoredCollector`/`TopCollector`/`UnlimitedCollector`
+      scoring path — was typed in the same scope. An `IndexReader.cursor()`
+      method was added to the base class so the cursor interface is part of the
+      documented, type-checked reader contract (all three concrete readers
+      already implemented it).
+- [x] **Three correctness fixes surfaced by the typing work.** No on-disk
+      format change and no runtime behaviour change for the built-in readers:
+      `SegmentReader.has_column` now honours its `bool` contract; a broken
+      abstract `IndexReader.doc_count()` body (referencing a non-existent
+      `deleted_count()`) now raises a clear `NotImplementedError` for third-party
+      subclasses instead of `AttributeError`; and a dead pre-3.8
+      `cached_property` fallback import was removed. `whoosh.reading` and
+      `whoosh.collectors` now type-check clean under the `mypy` smoke job.
 
 ## Now (next patch/minor)
 
