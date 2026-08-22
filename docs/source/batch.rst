@@ -113,6 +113,61 @@ scratch). It should not be the only method you use for indexing, because
 otherwise the number of segments will tend to increase forever!
 
 
+Tuning index size vs. speed (block compression)
+================================================
+
+Whoosh's default on-disk codec (``whoosh3``) ``zlib``-compresses each postings
+block before writing it. The compression *level* is tunable, letting you trade
+CPU time during indexing against the size of the finished index. This matters
+most for large batch jobs, where the index can be a meaningful fraction of your
+storage budget.
+
+Pass a codec with an explicit ``compression`` level (0–9) to
+:meth:`~whoosh.index.Index.writer`::
+
+    from whoosh import index
+    from whoosh.codec.whoosh3 import W3Codec
+
+    ix = index.open_dir("indexdir")
+
+    # Smaller index, a little more CPU while indexing:
+    writer = ix.writer(codec=W3Codec(compression=9))
+
+    # No block compression -- fastest writes, largest index:
+    writer = ix.writer(codec=W3Codec(compression=0))
+
+- ``compression=0`` disables block compression entirely. Writes are fastest,
+  but the index is much larger (roughly 2x on typical text).
+- ``compression=1`` captures the great majority of the size win at close to the
+  speed of no compression.
+- ``compression=3`` is the default: a balanced point that is a good choice for
+  almost everyone.
+- ``compression=6``–``9`` squeeze the index a little smaller in exchange for
+  more CPU. The extra savings above ``3`` are small on typical text.
+
+As a rough guide, a 3,000-document text index measured across levels:
+
+===============  ===================  ==============================
+``compression``  Relative index size  Notes
+===============  ===================  ==============================
+``0``            ~2.3x                fastest writes, no compression
+``1``            ~1.06x               nearly all the size win
+``3`` (default)  1.0x (baseline)      balanced
+``9``            ~0.98x               smallest, most CPU
+===============  ===================  ==============================
+
+Your own numbers will vary with the data (highly repetitive text compresses
+further; already-compact or random tokens compress less). If index size matters
+to you, measure on a representative sample. Very small blocks are left
+uncompressed automatically regardless of level, because ``zlib``'s header would
+otherwise make them *larger* -- so you never pay compression overhead where it
+would not help.
+
+Indexes written at any compression level are read back transparently: the level
+is recorded per block, so you can change it between writes, or read an old index
+with a differently configured writer, without any migration.
+
+
 The ``start_method`` parameter
 ==============================
 

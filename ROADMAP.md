@@ -281,9 +281,17 @@ About section of the README.)*
       (`PerDocumentReader.doc_field_length_reader`, with a fast `whoosh3`
       override) and calls it once per posting — byte-identical output, no
       format change, a few percent off build wall-time.
-    - **Block compression (`zlib.compress`).** Inherent to the format; could be
-      made tunable (compression level / codec choice) behind an option rather
-      than removed.
+    - **Block compression (`zlib.compress`).** *(Documented — Unreleased.)*
+      The `whoosh3` codec's per-block `zlib` level was already a constructor
+      parameter; it is now a documented, supported knob. Pass
+      `ix.writer(codec=W3Codec(compression=N))` (0–9) to trade indexing CPU for
+      index size — measured across levels on a 3,000-doc text index, `0`
+      (no compression) is ~2.3x larger than the default `3`, while `9` is only
+      ~2% smaller than `3`. See the
+      [batch-indexing guide](https://priya-sundaram-dev.github.io/whoosh/docs/batch.html).
+      Blocks below the `zlib`-header break-even are left uncompressed
+      automatically, and the level is recorded per block so indexes read back
+      transparently regardless of the writer's setting.
     Any change here ships only with the benchmark suite
     ([`benchmark/regression.py`](benchmark/regression.py)) showing a real,
     reproducible gain and green cross-version CI.
