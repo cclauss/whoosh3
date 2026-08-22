@@ -67,7 +67,7 @@ About section of the README.)*
       `fetch` tools with `pip install "whoosh3[mcp]"` and `whoosh-mcp ~/notes`,
       pure Python, no server, no native deps. The `SearchCore` class has no MCP
       dependency, so it's reusable behind any agent framework and unit-testable
-      on its own. A [Docker image](https://priya-sundaram-dev.github.io/whoosh/docs/mcp.html)
+      on its own. A [Docker image](https://priya-sundaram-dev.github.io/whoosh/whoosh-mcp-server-agent-search-tool.html)
       (3.33.0) lets it run without a local Python environment, and the server
       now fails with a single actionable line — not a traceback — when the
       optional `mcp` SDK is missing (3.33.1). Covered by `tests/test_mcp.py`.
@@ -98,7 +98,7 @@ About section of the README.)*
       contract as the LangChain module: imports without `llama-index-core`
       present and fails only at construction with an actionable message.
       Covered by `tests/test_llamaindex.py`, with a
-      [retriever landing page](https://priya-sundaram-dev.github.io/whoosh/demo/whoosh-llamaindex-retriever.html).
+      [retriever landing page](https://priya-sundaram-dev.github.io/whoosh/whoosh-llamaindex-retriever.html).
       These two integrations make Whoosh a drop-in keyword retriever for the
       RAG ecosystem while keeping the core dependency-free — heavy framework
       code stays optional, per the guiding principles.
