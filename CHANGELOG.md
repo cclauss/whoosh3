@@ -21,6 +21,18 @@ All notable changes to this project are documented here. This project follows
   suites pass.
 
 ### Fixed
+- `IndexReader.doc_count()` (the abstract base implementation) referenced a
+  non-existent `self.deleted_count()` method, so any third-party `IndexReader`
+  subclass that inherited the base `doc_count` instead of overriding it would
+  raise `AttributeError` rather than a clear `NotImplementedError`. The base
+  method now `raises NotImplementedError`, consistent with its sibling abstract
+  methods (`doc_count_all`, `frequency`, …). All built-in readers
+  (`SegmentReader`, `MultiReader`, `EmptyReader`) already override `doc_count`,
+  so runtime behaviour is unchanged; this only fixes the abstract contract for
+  downstream subclasses. Also removed a dead `cached_property` import-fallback
+  (the `< 3.8` branch can never run on Whoosh's 3.9+ floor and pulled in a
+  third-party package that isn't a dependency). Both changes clear the last two
+  `mypy` errors on `reading.py`, so the whole module now type-checks clean.
 - Documentation: corrected two broken Pages links in `ROADMAP.md` (the MCP
   Docker image and the LlamaIndex retriever landing page) that pointed to 404
   URLs.

@@ -32,14 +32,10 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from bisect import bisect_right
+from functools import cached_property
 from heapq import heapify, heappop, heapreplace, nlargest
 from math import log
 from typing import TYPE_CHECKING, Any
-
-try:
-    from functools import cached_property
-except ImportError:  # pragma: no cover - Python < 3.8 fallback
-    from cached_property import cached_property
 
 from whoosh import columns
 from whoosh.filedb.filestore import OverlayStorage
@@ -418,7 +414,7 @@ class IndexReader:
     def doc_count(self) -> int:
         """Returns the total number of UNDELETED documents in this reader."""
 
-        return self.doc_count_all() - self.deleted_count()
+        raise NotImplementedError
 
     @abstractmethod
     def frequency(self, fieldname: str, text: str | bytes) -> int:
