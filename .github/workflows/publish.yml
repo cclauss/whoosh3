@@ -5,10 +5,16 @@ on:
     types: [published]
   workflow_dispatch:
 
+# Default to no GITHUB_TOKEN permissions; each job opts in to only what it needs.
+permissions: {}
+
 jobs:
   build:
     name: Build distribution
     runs-on: ubuntu-latest
+    # Only needs to read the repo to build the sdist/wheel.
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

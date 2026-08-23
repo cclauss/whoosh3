@@ -10,6 +10,11 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# All jobs only check out and run tests/linters — they never write back to the
+# repo, so scope the GITHUB_TOKEN down to read-only for the whole workflow.
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Test (Python ${{ matrix.python-version }} / ${{ matrix.os }})
