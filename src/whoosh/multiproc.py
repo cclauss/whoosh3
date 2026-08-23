@@ -38,6 +38,19 @@ commits at the cost of leaving several segments behind.
 The ``start_method`` argument controls how the sub-processes are launched (one
 of :func:`multiprocessing.get_all_start_methods` for the platform, typically
 ``"fork"``, ``"spawn"``, or ``"forkserver"``).
+
+.. note::
+   When ``start_method`` is left as ``None`` (the default), Whoosh uses the
+   interpreter default, which is ``"fork"`` on most POSIX platforms. On
+   CPython 3.12+ a call to :func:`os.fork` from a process that already has
+   multiple threads emits a ``DeprecationWarning`` ("use of fork() may lead to
+   deadlocks in the child"), and CPython is moving away from fork-by-default in
+   future versions. If you index from a multi-threaded program, or simply want
+   a warning-free and forward-compatible path, pass an explicit non-fork start
+   method, e.g. ``ix.writer(procs=4, multisegment=True, start_method="spawn")``.
+   Note that ``"spawn"`` and ``"forkserver"`` re-import your module in each
+   worker, so make sure your indexing code is guarded by
+   ``if __name__ == "__main__":``.
 """
 
 import multiprocessing
