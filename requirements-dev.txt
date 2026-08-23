@@ -1,4 +1,4 @@
+-e .
 pytest
 pythomata
 versioneer
--e .
