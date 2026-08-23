@@ -124,8 +124,14 @@ def test_asyncwriter_reports_background_exception():
 
         ix.writer = boom
         w.commit()
-        if w.running:
-            w.join()
+        # ``is_alive()`` is the authoritative, race-free signal for whether the
+        # background thread has finished. ``w.running`` is a convenience flag
+        # cleared in a ``finally:`` *before* the thread fully exits, so gating
+        # the join on it can race: the flag reads False while the thread is
+        # still alive. This window is wide enough to fail intermittently on the
+        # free-threaded (3.15t) build. ``commit()`` forced the background path
+        # above, so the thread was started and joining it is always valid.
+        w.join()
 
         assert not w.is_alive()
         assert not w.running
