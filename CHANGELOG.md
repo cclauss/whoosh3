@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.44.0] - 2026-08-23
+
 ### Changed
 - **`whoosh3[mcp]` now targets the MCP Python SDK 2.x.** The SDK renamed
   `FastMCP` to `MCPServer` (`mcp.server.MCPServer`) in its 2.0 release
@@ -32,6 +34,13 @@ All notable changes to this project are documented here. This project follows
 - Fixed the broken CONTRIBUTING link in the pull-request template (#103), which
   pointed at a relative path that 404s from the PR-compose page; it now uses an
   absolute URL.
+- Silenced the `os.fork()` `DeprecationWarning` noise that CPython 3.12+ emits
+  when the multiprocessing `MpWriter` path forks while threads are alive: the
+  warning is now scoped-out via `filterwarnings` in `setup.cfg` and the
+  `MpWriter`/`procs=` docstrings point users at `start_method="spawn"` /
+  `"forkserver"` for fork-free multiprocess indexing (thanks @cclauss, #113).
+- Swept documentation, docstring and comment typos across `src`, `tests` and
+  `docs` with codespell — no functional changes (thanks @cclauss, #114).
 
 ### Testing
 - Added a forward-compatibility regression test for `MpWriter` that runs the
