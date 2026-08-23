@@ -194,6 +194,13 @@ About section of the README.)*
       classifier. Whoosh now supports 3.9–3.14.
 - [ ] Triage the inherited issue backlog; label, reproduce, close stale. Two
       long-standing bugs already fixed (gh#99, gh#116); more to review.
+- [ ] **Python support policy.** CI now also exercises the 3.15 / 3.15t
+      release candidates (non-blocking until 3.15.0 final; gh#104 follow-up).
+      Python 3.9 is past upstream end-of-life, but the 3.9 floor stays through
+      the current 3.x line — the maintenance cost is ~zero while the suite is
+      green, and there is still a long tail of pinned-3.9 deployments installing
+      `whoosh3`. The floor will be raised to 3.10 in the next minor, announced
+      in the changelog and here before it lands, so no one is surprised.
 - [x] **`whoosh.analysis` typing sweep complete (gh#82, in `[Unreleased]`).**
       The last self-contained analysis module, `whoosh.analysis.intraword`
       (`CompoundWordFilter`, `BiWordFilter`, `ShingleFilter`,
