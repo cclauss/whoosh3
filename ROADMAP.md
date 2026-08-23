@@ -186,6 +186,30 @@ About section of the README.)*
       `cached_property` fallback import was removed. `whoosh.reading` and
       `whoosh.collectors` now type-check clean under the `mypy` smoke job.
 
+## Done (3.44.0 — released 2026-08-23)
+
+- [x] **`whoosh3[mcp]` moved to the MCP Python SDK 2.x (gh#111, gh#112).** The
+      SDK renamed `FastMCP` to `MCPServer` (`mcp.server.MCPServer`) in its 2.0
+      release; `whoosh.mcp` now imports and constructs `MCPServer`, and the `mcp`
+      optional dependency is `mcp>=2`. The tool surface (`@server.tool()`,
+      `list_tools()`, `run()`) is unchanged, so the `whoosh-mcp` console script
+      and the "Whoosh as an MCP server" docs work as before. First contribution
+      from @mayuriphad, with a packaging-format catch from @cclauss.
+- [x] **The `ruff` lint gate is now meaningful (gh#104).** The CI `ruff check`
+      step previously ran with `|| true`, hiding 457 latent findings. The run
+      now fails for real: genuine style nits were fixed automatically and the
+      intentional patterns Whoosh relies on (function-local lazy imports, naive
+      `DATETIME` handling, deliberate blind-except guards) are suppressed with
+      documented rationale rather than silently ignored. No behaviour change.
+- [x] **Quieter multiprocess indexing (gh#113).** The `os.fork()`
+      `DeprecationWarning` that CPython 3.12+ emits when `MpWriter` forks with
+      threads alive is scoped out via `filterwarnings`, and the `procs=`
+      docstrings point users at `start_method="spawn"`/`"forkserver"` for
+      fork-free multiprocess indexing. A forward-compatibility regression test
+      exercises the default indexing path under a non-`fork` context (thanks
+      @cclauss). Documentation/comment typos were also swept with codespell
+      (gh#114, @cclauss).
+
 ## Now (next patch/minor)
 
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
