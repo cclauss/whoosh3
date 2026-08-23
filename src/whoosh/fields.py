@@ -26,7 +26,7 @@
 # policies, either expressed or implied, of Matt Chaput.
 
 """
- Contains functions and classes related to fields.
+Contains functions and classes related to fields.
 """
 
 from __future__ import annotations
@@ -197,9 +197,7 @@ class FieldType:
     # Text
 
     def index(
-        self,
-        value: Any,
-        **kwargs: Any
+        self, value: Any, **kwargs: Any
     ) -> Generator[tuple[bytes, int, float | int, bytes], Any, None]:
         """Returns an iterator of (btext, frequency, weight, encoded_value)
         tuples for each unique word in the input value.
@@ -236,10 +234,9 @@ class FieldType:
             raise Exception(f"{self.__class__} field has no analyzer")
         return self.analyzer(value, **kwargs)
 
-    def process_text(self,
-                     qstring: str,
-                     mode: str = "",
-                     **kwargs: Any) -> Iterator[str]:
+    def process_text(
+        self, qstring: str, mode: str = "", **kwargs: Any
+    ) -> Iterator[str]:
         """
         Analyzes the given string and returns an iterator of token texts.
 
@@ -321,10 +318,7 @@ class FieldType:
 
         return False
 
-    def parse_query(self,
-                    fieldname: str,
-                    qstring: str,
-                    boost: float = 1.0) -> Query:
+    def parse_query(self, fieldname: str, qstring: str, boost: float = 1.0) -> Query:
         """
         When ``self_parsing()`` returns True, the query parser will call
         this method to parse basic query text.
@@ -332,13 +326,15 @@ class FieldType:
 
         raise NotImplementedError(self.__class__.__name__)
 
-    def parse_range(self,
-                    fieldname: str,
-                    start: Any,
-                    end: Any,
-                    startexcl: bool,
-                    endexcl: bool,
-                    boost: float = 1.0) -> Query:
+    def parse_range(
+        self,
+        fieldname: str,
+        start: Any,
+        end: Any,
+        startexcl: bool,
+        endexcl: bool,
+        boost: float = 1.0,
+    ) -> Query:
         """
         When ``self_parsing()`` returns True, the query parser will call
         this method to parse range query text. If this method returns None
@@ -868,9 +864,7 @@ class NUMERIC(FieldType):
     def self_parsing(self) -> bool:
         return True
 
-    def parse_query(
-        self, fieldname: str, qstring: str, boost: float = 1.0
-    ) -> Query:
+    def parse_query(self, fieldname: str, qstring: str, boost: float = 1.0) -> Query:
         from whoosh import query
         from whoosh.qparser.common import QueryParserError
 
@@ -1009,9 +1003,7 @@ class DATETIME(NUMERIC):
             raise Exception(f"{qstring!r} is not a parseable date")
         return at
 
-    def parse_query(
-        self, fieldname: str, qstring: str, boost: float = 1.0
-    ) -> Query:
+    def parse_query(self, fieldname: str, qstring: str, boost: float = 1.0) -> Query:
         from whoosh import query
         from whoosh.util.times import is_ambiguous
 
@@ -1117,9 +1109,7 @@ class BOOLEAN(FieldType):
     def self_parsing(self) -> bool:
         return True
 
-    def parse_query(
-        self, fieldname: str, qstring: str, boost: float = 1.0
-    ) -> Any:
+    def parse_query(self, fieldname: str, qstring: str, boost: float = 1.0) -> Any:
         from whoosh import query
 
         if qstring == "*":
@@ -1700,9 +1690,7 @@ class Schema:
         else:
             raise KeyError(f"No field named {fieldname!r}")
 
-    def indexable_fields(
-        self, fieldname: str
-    ) -> Iterator[tuple[str, FieldType]]:
+    def indexable_fields(self, fieldname: str) -> Iterator[tuple[str, FieldType]]:
         if fieldname in self._subfields:
             for subname in self._subfields[fieldname]:
                 yield subname, self._fields[subname]

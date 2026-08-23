@@ -161,9 +161,7 @@ def test_tee_filter_eq():
     # relies on filters comparing cleanly.
     f1 = analysis.TeeFilter(analysis.LowercaseFilter(), analysis.PassFilter())
     f2 = analysis.TeeFilter(analysis.LowercaseFilter(), analysis.PassFilter())
-    f3 = analysis.TeeFilter(
-        analysis.LowercaseFilter(), analysis.ReverseTextFilter()
-    )
+    f3 = analysis.TeeFilter(analysis.LowercaseFilter(), analysis.ReverseTextFilter())
     assert f1 == f2
     assert f1 != f3
     # Comparing against a non-TeeFilter must not raise, just be unequal.
@@ -699,7 +697,7 @@ def test_unicode_normalization_tokenizer():
 
     ana = analysis.NormalizingRegexTokenizer("NFKC") | analysis.LowercaseFilter()
 
-    nfc = unicodedata.normalize("NFC", "caf\u00e9")   # composed é
+    nfc = unicodedata.normalize("NFC", "caf\u00e9")  # composed é
     nfd = unicodedata.normalize("NFD", "cafe\u0301")  # e + combining acute
     assert nfc != nfd  # sanity: the raw strings really do differ
 
@@ -724,8 +722,12 @@ def test_normalizing_tokenizer_form_validation_and_equality():
     # Equality depends on the form (and the regex), so analyzers that differ
     # only in normalization form are not considered equal -- this matters for
     # caching keyed on analyzer identity.
-    assert analysis.NormalizingRegexTokenizer("NFC") == analysis.NormalizingRegexTokenizer("NFC")
-    assert analysis.NormalizingRegexTokenizer("NFC") != analysis.NormalizingRegexTokenizer("NFKC")
+    assert analysis.NormalizingRegexTokenizer(
+        "NFC"
+    ) == analysis.NormalizingRegexTokenizer("NFC")
+    assert analysis.NormalizingRegexTokenizer(
+        "NFC"
+    ) != analysis.NormalizingRegexTokenizer("NFKC")
     assert analysis.NormalizingRegexTokenizer("NFC") != analysis.RegexTokenizer()
 
     # NFD decomposes accents into a base letter plus a combining mark. The
@@ -733,6 +735,7 @@ def test_normalizing_tokenizer_form_validation_and_equality():
     # this is the "strip accents by decomposing" behaviour, and it is stable
     # regardless of whether the input arrived composed (NFC) or decomposed.
     import unicodedata
+
     nfd = analysis.NormalizingRegexTokenizer("NFD")
     from_nfc = [t.text for t in nfd(unicodedata.normalize("NFC", "caf\u00e9"))]
     from_nfd = [t.text for t in nfd(unicodedata.normalize("NFD", "cafe\u0301"))]
@@ -760,7 +763,9 @@ def test_cjk_filter_positions_and_chars():
     # Splitting one token into several must renumber positions consecutively
     # (phrase queries rely on this) and keep correct character offsets.
     stream = analysis.RegexTokenizer()("a日本b", positions=True, chars=True)
-    out = [(t.text, t.pos, t.startchar, t.endchar) for t in analysis.CJKFilter()(stream)]
+    out = [
+        (t.text, t.pos, t.startchar, t.endchar) for t in analysis.CJKFilter()(stream)
+    ]
     assert out == [
         ("a", 0, 0, 1),
         ("日", 1, 1, 2),
@@ -772,7 +777,9 @@ def test_cjk_filter_positions_and_chars():
 def test_cjk_analyzer():
     ana = analysis.CJKAnalyzer()
     # Japanese sentence -> per-character tokens (particles included).
-    assert [t.text for t in ana("私は日本語を勉強します")] == list("私は日本語を勉強します")
+    assert [t.text for t in ana("私は日本語を勉強します")] == list(
+        "私は日本語を勉強します"
+    )
     # Latin words are lowercased and grouped; CJK split out.
     assert [t.text for t in ana("Searching 東京")] == ["searching", "東", "京"]
     # Single-character CJK tokens are NOT dropped (minsize=1), but English
@@ -787,7 +794,9 @@ def test_cjk_analyzer_search():
     )
     ix = RamStorage().create_index(schema)
     with ix.writer() as w:
-        w.add_document(path="jp", content="私は日本語を勉強します。東京に住んでいます。")
+        w.add_document(
+            path="jp", content="私は日本語を勉強します。東京に住んでいます。"
+        )
         w.add_document(path="cn", content="全文搜索很有用")
         w.add_document(path="en", content="searching english notes")
 

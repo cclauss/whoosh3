@@ -28,6 +28,7 @@ Everything uses only the public Whoosh API, so you can copy
 Author: Priya Sundaram (maintainer of the Whoosh revival). Written with the
 help of an AI assistant.
 """
+
 from __future__ import annotations
 
 # The implementation now lives in the installable package so the same code

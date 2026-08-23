@@ -229,7 +229,7 @@ class TermRange(RangeMixin, terms.MultiTerm):
                 return
 
         if self.end is None:
-            end = b"\xFF\xFF\xFF\xFF"
+            end = b"\xff\xff\xff\xff"
         else:
             try:
                 end = field.to_bytes(self.end)

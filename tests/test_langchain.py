@@ -58,7 +58,9 @@ def test_from_texts_rejects_mismatched_lengths():
 
 def test_open_dir_round_trips(tmp_path):
     path = str(tmp_path / "ix")
-    WhooshSearch.from_texts(texts=["persisted document about whoosh"], ids=["x"], path=path)
+    WhooshSearch.from_texts(
+        texts=["persisted document about whoosh"], ids=["x"], path=path
+    )
     reopened = WhooshSearch.open_dir(path)
     hits = reopened.search("whoosh", k=1)
     assert hits and hits[0].id == "x"

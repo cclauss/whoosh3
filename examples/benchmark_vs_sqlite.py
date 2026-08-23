@@ -168,8 +168,11 @@ def main() -> None:
     row("index build (s)", f"{wb:.3f}", f"{sb:.3f}")
     row("index size", human_bytes(wsz), human_bytes(ssz))
     row(f"{args.queries} queries (s)", f"{wq:.3f}", f"{sq:.3f}")
-    row("avg query (ms)", f"{wq / args.queries * 1000:.3f}",
-        f"{sq / args.queries * 1000:.3f}")
+    row(
+        "avg query (ms)",
+        f"{wq / args.queries * 1000:.3f}",
+        f"{sq / args.queries * 1000:.3f}",
+    )
     row("rows returned (top10)", str(wh), str(sh))
     print("=" * 60)
     print(

@@ -95,7 +95,11 @@ class RegexTokenizer(Tokenizer):
     ["hi", "there", "3.141", "big", "time", "under_score"]
     """
 
-    def __init__(self, expression: str | re.Pattern[str] = default_pattern, gaps: bool = False,):
+    def __init__(
+        self,
+        expression: str | re.Pattern[str] = default_pattern,
+        gaps: bool = False,
+    ):
         """
         :param expression: A regular expression object or string. Each match
             of the expression equals a token. Group 0 (the entire matched text)
@@ -127,7 +131,6 @@ class RegexTokenizer(Tokenizer):
         mode: str = "",
         **kwargs: Any,
     ) -> Iterator[Token]:
-
         """
         :param value: The unicode string to tokenize.
         :param positions: Whether to record token positions in the token.
@@ -251,7 +254,12 @@ class NormalizingRegexTokenizer(RegexTokenizer):
         does not affect matching.
     """
 
-    def __init__(self, form: str = "NFKC", expression: str | re.Pattern[str] = default_pattern, gaps: bool = False,):
+    def __init__(
+        self,
+        form: str = "NFKC",
+        expression: str | re.Pattern[str] = default_pattern,
+        gaps: bool = False,
+    ):
         """
         :param form: the normalization form to apply, any value accepted by
             :func:`unicodedata.normalize` -- ``"NFC"``, ``"NFD"``, ``"NFKC"``

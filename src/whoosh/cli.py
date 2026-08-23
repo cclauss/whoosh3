@@ -26,6 +26,7 @@ pure Python::
 Everything here uses only the public Whoosh API, so the same code doubles as
 a worked example you can copy into your own project and adapt.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -51,12 +52,20 @@ if TYPE_CHECKING:
 __all__ = ["main", "build_parser"]
 
 DEFAULT_EXTS: tuple[str, ...] = (
-    ".txt", ".md", ".rst", ".py", ".cfg", ".ini", ".toml", ".json",
+    ".txt",
+    ".md",
+    ".rst",
+    ".py",
+    ".cfg",
+    ".ini",
+    ".toml",
+    ".json",
 )
 INDEX_DIRNAME = ".whoosh_index"
 MAX_FILE_BYTES = 5_000_000  # skip anything larger; keeps indexing snappy
 _SIZE_RE = re.compile(r"^\s*(\d+)\s*([kmg]?)b?\s*$", re.IGNORECASE)
-_SIZE_MULTIPLIERS = {"": 1, "k": 1024, "m": 1024 ** 2, "g": 1024 ** 3}
+_SIZE_MULTIPLIERS = {"": 1, "k": 1024, "m": 1024**2, "g": 1024**3}
+
 
 def build_schema() -> Schema:
     """Schema: a stored path/title, a stemmed full-text body, and mtime.
@@ -71,8 +80,13 @@ def build_schema() -> Schema:
     )
 
 
-def iter_files(root: str, exts: tuple[str, ...], exclude: tuple[str, ...] = (),
-                max_size: int | None = None, follow_symlinks: bool = False):
+def iter_files(
+    root: str,
+    exts: tuple[str, ...],
+    exclude: tuple[str, ...] = (),
+    max_size: int | None = None,
+    follow_symlinks: bool = False,
+):
     """Yield ``(abspath, mtime)`` for files under *root* matching *exts*.
 
     Skips the index directory itself and common noise directories. Files
@@ -156,15 +170,20 @@ def cmd_index(args: argparse.Namespace) -> int:
     if args.dry_run:
         rels = sorted(
             os.path.relpath(full, root)
-            for full, _mtime in iter_files(root, exts, exclude=tuple(args.exclude),
-                                            max_size=args.max_size,
-                                            follow_symlinks=args.follow_symlinks)
+            for full, _mtime in iter_files(
+                root,
+                exts,
+                exclude=tuple(args.exclude),
+                max_size=args.max_size,
+                follow_symlinks=args.follow_symlinks,
+            )
         )
         for rel in rels:
             print(rel)
         n = len(rels)
-        print(f"Would index {n} file{'s' if n != 1 else ''} under {root}",
-              file=sys.stderr)
+        print(
+            f"Would index {n} file{'s' if n != 1 else ''} under {root}", file=sys.stderr
+        )
         return 0
 
     index_dir = os.path.join(root, INDEX_DIRNAME)
@@ -188,9 +207,13 @@ def cmd_index(args: argparse.Namespace) -> int:
     t0 = time.time()
     writer = ix.writer()
     try:
-        for full, mtime in iter_files(root, exts, exclude=tuple(args.exclude),
-                                        max_size=args.max_size,
-                                        follow_symlinks=args.follow_symlinks):
+        for full, mtime in iter_files(
+            root,
+            exts,
+            exclude=tuple(args.exclude),
+            max_size=args.max_size,
+            follow_symlinks=args.follow_symlinks,
+        ):
             rel = os.path.relpath(full, root)
             seen.add(rel)
             if args.update and rel in indexed and indexed[rel] >= mtime:
@@ -234,10 +257,7 @@ def cmd_index(args: argparse.Namespace) -> int:
 
 
 def cmd_search(args: argparse.Namespace) -> int:
-    if (
-        getattr(args, "null", False)
-        and not getattr(args, "files_with_matches", False)
-    ):
+    if getattr(args, "null", False) and not getattr(args, "files_with_matches", False):
         print(
             "whoosh search: error: --null requires --files-with-matches",
             file=sys.stderr,
@@ -247,8 +267,10 @@ def cmd_search(args: argparse.Namespace) -> int:
     root = os.path.abspath(args.directory)
     index_dir = os.path.join(root, INDEX_DIRNAME)
     if not index.exists_in(index_dir):
-        print(f"error: no index at {index_dir}. Run 'whoosh index' first.",
-              file=sys.stderr)
+        print(
+            f"error: no index at {index_dir}. Run 'whoosh index' first.",
+            file=sys.stderr,
+        )
         return 2
 
     ix = index.open_dir(index_dir)
@@ -267,17 +289,21 @@ def cmd_search(args: argparse.Namespace) -> int:
     # matching more of the terms still rank higher.
     group = OrGroup.factory(0.9) if getattr(args, "or_", False) else None
     if args.field:
-        parser = MultifieldParser(search_fields, schema=ix.schema, group=group) \
-            if group is not None \
+        parser = (
+            MultifieldParser(search_fields, schema=ix.schema, group=group)
+            if group is not None
             else MultifieldParser(search_fields, schema=ix.schema)
+        )
     else:
         # Preserve the existing title/body weighting when no fields are selected.
         boosts = {"title": 2.0, "body": 1.0}
-        parser = MultifieldParser(search_fields, schema=ix.schema,
-                                  fieldboosts=boosts, group=group) \
-            if group is not None \
-            else MultifieldParser(search_fields, schema=ix.schema,
-                                  fieldboosts=boosts)
+        parser = (
+            MultifieldParser(
+                search_fields, schema=ix.schema, fieldboosts=boosts, group=group
+            )
+            if group is not None
+            else MultifieldParser(search_fields, schema=ix.schema, fieldboosts=boosts)
+        )
     query = parser.parse(args.query)
 
     with ix.searcher() as s:
@@ -286,8 +312,13 @@ def cmd_search(args: argparse.Namespace) -> int:
             results = s.search(query, limit=None)
             min_score = getattr(args, "min_score", None)
             if min_score is not None:
-                print(sum(1 for h in results
-                          if h.score is not None and h.score >= min_score))
+                print(
+                    sum(
+                        1
+                        for h in results
+                        if h.score is not None and h.score >= min_score
+                    )
+                )
             else:
                 print(len(results))
             return 0
@@ -295,8 +326,7 @@ def cmd_search(args: argparse.Namespace) -> int:
         search_kwargs = {}
         if getattr(args, "sort_by", "score") == "mtime":
             search_kwargs.update(sortedby="mtime", reverse=True)
-        results = s.search_page(
-            query, args.page, pagelen=args.limit, **search_kwargs)
+        results = s.search_page(query, args.page, pagelen=args.limit, **search_kwargs)
 
         # ResultsPage clamps an oversized page number to the last available
         # page. The CLI should instead treat it like an empty search so users
@@ -318,9 +348,8 @@ def cmd_search(args: argparse.Namespace) -> int:
         min_score = getattr(args, "min_score", None)
 
         def passes_min_score(hit):
-            return (
-                min_score is None
-                or (hit.score is not None and hit.score >= min_score)
+            return min_score is None or (
+                hit.score is not None and hit.score >= min_score
             )
 
         # --files-with-matches: print bare file paths, one per hit.
@@ -343,7 +372,8 @@ def cmd_search(args: argparse.Namespace) -> int:
         else:
             highlight_results.formatter = UppercaseFormatter()
         highlight_results.fragmenter = ContextFragmenter(
-            maxchars=snippet_chars, surround=snippet_chars // 5)
+            maxchars=snippet_chars, surround=snippet_chars // 5
+        )
 
         def make_snippet(hit):
             """Return a display snippet for ``hit`` honoring the output flags.
@@ -361,7 +391,9 @@ def cmd_search(args: argparse.Namespace) -> int:
             snippet = hit.highlights("body")
             if not snippet:
                 text = " ".join(body.split())
-                snippet = text[:snippet_chars] + ("..." if len(text) > snippet_chars else "")
+                snippet = text[:snippet_chars] + (
+                    "..." if len(text) > snippet_chars else ""
+                )
             return " ".join(snippet.split())
 
         fields_to_show = None
@@ -369,7 +401,10 @@ def cmd_search(args: argparse.Namespace) -> int:
             fields_to_show = [f.strip() for f in args.fields.split(",") if f.strip()]
             for f in fields_to_show:
                 if f not in ix.schema.names():
-                    print(f"whoosh search: error: unknown field {f!r}. Valid fields: {', '.join(ix.schema.names())}", file=sys.stderr)
+                    print(
+                        f"whoosh search: error: unknown field {f!r}. Valid fields: {', '.join(ix.schema.names())}",
+                        file=sys.stderr,
+                    )
                     return 2
 
         def make_hit_dict(hit):
@@ -378,7 +413,7 @@ def cmd_search(args: argparse.Namespace) -> int:
             hit_dict = {
                 "path": hit["path"],
                 "score": hit.score,
-                "snippet": make_snippet(hit)
+                "snippet": make_snippet(hit),
             }
             if "title" in hit and hit["title"]:
                 hit_dict["title"] = hit["title"]
@@ -416,13 +451,19 @@ def cmd_search(args: argparse.Namespace) -> int:
         for i, hit in enumerate(displayed, results.offset + 1):
             shown += 1
             if fields_to_show:
-                fields_str = ", ".join(f"{f}: {hit[f]}" for f in fields_to_show if f in hit)
+                fields_str = ", ".join(
+                    f"{f}: {hit[f]}" for f in fields_to_show if f in hit
+                )
                 print(f"{i}. {fields_str}\n")
             else:
                 print(f"{i}. {hit['path']}  (score {hit.score:.2f})")
                 print(f"   {make_snippet(hit)}\n")
 
-        if getattr(args, "count", False) or getattr(args, "json", False) or getattr(args, "html", False):
+        if (
+            getattr(args, "count", False)
+            or getattr(args, "json", False)
+            or getattr(args, "html", False)
+        ):
             pass
         else:
             if args.page > 1:
@@ -460,8 +501,10 @@ def cmd_stats(args: argparse.Namespace) -> int:
     root = os.path.abspath(args.directory)
     index_dir = os.path.join(root, INDEX_DIRNAME)
     if not index.exists_in(index_dir):
-        print(f"error: no index at {index_dir}. Run 'whoosh index' first.",
-              file=sys.stderr)
+        print(
+            f"error: no index at {index_dir}. Run 'whoosh index' first.",
+            file=sys.stderr,
+        )
         return 2
 
     ix = index.open_dir(index_dir)
@@ -501,8 +544,10 @@ def cmd_stats(args: argparse.Namespace) -> int:
         return 0
 
     print(f"Index: {index_dir}")
-    print(f"  documents:   {doc_count}"
-          + (f"  ({doc_count_all} incl. deleted)" if doc_count_all != doc_count else ""))
+    print(
+        f"  documents:   {doc_count}"
+        + (f"  ({doc_count_all} incl. deleted)" if doc_count_all != doc_count else "")
+    )
     print(f"  fields:      {len(fields)}")
     for name, ftype in fields:
         print(f"    - {name} ({ftype})")
@@ -523,6 +568,7 @@ def cmd_stats(args: argparse.Namespace) -> int:
         # this up front and give a clear, actionable message instead of
         # surfacing a low-level decoding error.
         from whoosh.fields import NUMERIC as _NUMERIC
+
         if isinstance(field, _NUMERIC):
             ftype = type(field).__name__
             print(
@@ -536,8 +582,10 @@ def cmd_stats(args: argparse.Namespace) -> int:
                 top_terms = r.most_frequent_terms(fieldname, number=args.top)
         except Exception as exc:  # noqa: BLE001
             # Any remaining edge case: show a clear message, not a traceback.
-            print(f"error: cannot list top terms for field {fieldname!r}: {exc}",
-                  file=sys.stderr)
+            print(
+                f"error: cannot list top terms for field {fieldname!r}: {exc}",
+                file=sys.stderr,
+            )
             return 2
         print(f"Top terms in {fieldname!r}:")
         for freq, term in top_terms:
@@ -556,7 +604,9 @@ def _check_positive_int(value: str) -> int:
 def _parse_size(value):
     match = _SIZE_RE.match(value)
     if not match:
-        raise argparse.ArgumentTypeError(f"invalid size {value!r}: expected e.g. 1024, 500k, 10MB, 2g")
+        raise argparse.ArgumentTypeError(
+            f"invalid size {value!r}: expected e.g. 1024, 500k, 10MB, 2g"
+        )
     number, unit = match.groups()
     multiplier = _SIZE_MULTIPLIERS[unit.lower()]
     return int(number) * multiplier
@@ -566,118 +616,213 @@ def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="whoosh",
         description="Full-text search a folder of files, powered by Whoosh "
-                    "(pure-Python, no server).",
+        "(pure-Python, no server).",
         epilog="Docs, examples, and source: "
-               "https://github.com/priya-sundaram-dev/whoosh",
+        "https://github.com/priya-sundaram-dev/whoosh",
     )
     p.add_argument(
-        "-V", "--version",
+        "-V",
+        "--version",
         action="version",
         version=f"%(prog)s {__version_str__} "
-                "(https://github.com/priya-sundaram-dev/whoosh)",
+        "(https://github.com/priya-sundaram-dev/whoosh)",
     )
     sub = p.add_subparsers(dest="command", required=True)
 
     pi = sub.add_parser("index", help="build/refresh the search index")
-    pi.add_argument("directory", nargs="?", default=".",
-                    help="directory to index (default: current)")
-    pi.add_argument("--update", action="store_true",
-                    help="incremental: only (re)index changed/new files, "
-                         "drop deleted")
-    pi.add_argument("--ext", default="",
-                    help="comma-separated extensions to include "
-                         "(default: common text/source)")
-    pi.add_argument("--exclude", action="append", default=[], metavar="PATTERN",
-                    help="exclude paths matching the given glob pattern "
-                         "(e.g., 'build/*' or '*.min.js'). Can be specified multiple times.")
-    pi.add_argument("--max-size", type=_parse_size, default=None,
-                    dest="max_size", metavar="SIZE",
-                    help="skip files larger than SIZE (e.g. 10MB, 500k); "
-                     "no limit by default")
-    pi.add_argument("--dry-run", action="store_true", dest="dry_run",
-                    help="list the files that would be indexed under the "
-                         "current --ext/--exclude filters and exit, without "
-                         "creating, clearing, or writing the index")
-    pi.add_argument("--follow-symlinks", action="store_true",
-                    dest="follow_symlinks",
-                    help="follow symlinked directories when indexing "
-                         "(off by default)")
+    pi.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="directory to index (default: current)",
+    )
+    pi.add_argument(
+        "--update",
+        action="store_true",
+        help="incremental: only (re)index changed/new files, drop deleted",
+    )
+    pi.add_argument(
+        "--ext",
+        default="",
+        help="comma-separated extensions to include (default: common text/source)",
+    )
+    pi.add_argument(
+        "--exclude",
+        action="append",
+        default=[],
+        metavar="PATTERN",
+        help="exclude paths matching the given glob pattern "
+        "(e.g., 'build/*' or '*.min.js'). Can be specified multiple times.",
+    )
+    pi.add_argument(
+        "--max-size",
+        type=_parse_size,
+        default=None,
+        dest="max_size",
+        metavar="SIZE",
+        help="skip files larger than SIZE (e.g. 10MB, 500k); no limit by default",
+    )
+    pi.add_argument(
+        "--dry-run",
+        action="store_true",
+        dest="dry_run",
+        help="list the files that would be indexed under the "
+        "current --ext/--exclude filters and exit, without "
+        "creating, clearing, or writing the index",
+    )
+    pi.add_argument(
+        "--follow-symlinks",
+        action="store_true",
+        dest="follow_symlinks",
+        help="follow symlinked directories when indexing (off by default)",
+    )
     pi.set_defaults(func=cmd_index)
 
     ps = sub.add_parser("search", help="query the index")
-    ps.add_argument("query",
-                    help='search query (supports AND/OR/NOT, "phrases", '
-                         'field:term)')
-    ps.add_argument("directory", nargs="?", default=".",
-                    help="directory whose index to search (default: current)")
-    ps.add_argument("--limit", type=_check_positive_int, default=10,
-                    help="max results (default: 10)")
-    ps.add_argument("--min-score", type=float, default=None, metavar="FLOAT",
-                    dest="min_score",
-                    help="only show hits whose relevance score is >= FLOAT "
-                         "(drops weak matches; default: no floor)")
-    ps.add_argument("--page", type=_check_positive_int, default=1,
-                    help="1-based results page (default: 1)")
-    ps.add_argument("--fields",
-                    help="comma-separated list of stored fields to include in output")
-    ps.add_argument("--field", action="append", metavar="NAME",
-                    help="field to search (repeatable; default: title and body)")
-    ps.add_argument("--or", dest="or_", action="store_true",
-                    help="match documents containing ANY query term "
-                         "(default: all terms must match)")
-    ps.add_argument("--snippet-chars", type=_check_positive_int, default=200,
-                    metavar="N", dest="snippet_chars",
-                    help="max characters of context to show per snippet "
-                         "(default: 200)")
-    ps.add_argument("--sort-by", choices=["score", "mtime"], default="score",
-                    dest="sort_by",
-                    help="sort results by relevance score (default) or "
-                         "file modification time")
-    ps.add_argument("-0", "--null", action="store_true", dest="null",
-                    help="with -l, separate paths with a NUL byte instead of "
-                         "a newline (for xargs -0)")
-    ps.add_argument("--color", choices=["auto", "always", "never"],
-                    default="auto", metavar="WHEN",
-                    help="colorize matched terms in the default text output: "
-                         "'auto' (default) uses color only when writing to a "
-                         "terminal, honoring NO_COLOR/FORCE_COLOR; 'always' / "
-                         "'never' force it on or off")
+    ps.add_argument(
+        "query", help='search query (supports AND/OR/NOT, "phrases", field:term)'
+    )
+    ps.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="directory whose index to search (default: current)",
+    )
+    ps.add_argument(
+        "--limit",
+        type=_check_positive_int,
+        default=10,
+        help="max results (default: 10)",
+    )
+    ps.add_argument(
+        "--min-score",
+        type=float,
+        default=None,
+        metavar="FLOAT",
+        dest="min_score",
+        help="only show hits whose relevance score is >= FLOAT "
+        "(drops weak matches; default: no floor)",
+    )
+    ps.add_argument(
+        "--page",
+        type=_check_positive_int,
+        default=1,
+        help="1-based results page (default: 1)",
+    )
+    ps.add_argument(
+        "--fields", help="comma-separated list of stored fields to include in output"
+    )
+    ps.add_argument(
+        "--field",
+        action="append",
+        metavar="NAME",
+        help="field to search (repeatable; default: title and body)",
+    )
+    ps.add_argument(
+        "--or",
+        dest="or_",
+        action="store_true",
+        help="match documents containing ANY query term "
+        "(default: all terms must match)",
+    )
+    ps.add_argument(
+        "--snippet-chars",
+        type=_check_positive_int,
+        default=200,
+        metavar="N",
+        dest="snippet_chars",
+        help="max characters of context to show per snippet (default: 200)",
+    )
+    ps.add_argument(
+        "--sort-by",
+        choices=["score", "mtime"],
+        default="score",
+        dest="sort_by",
+        help="sort results by relevance score (default) or file modification time",
+    )
+    ps.add_argument(
+        "-0",
+        "--null",
+        action="store_true",
+        dest="null",
+        help="with -l, separate paths with a NUL byte instead of "
+        "a newline (for xargs -0)",
+    )
+    ps.add_argument(
+        "--color",
+        choices=["auto", "always", "never"],
+        default="auto",
+        metavar="WHEN",
+        help="colorize matched terms in the default text output: "
+        "'auto' (default) uses color only when writing to a "
+        "terminal, honoring NO_COLOR/FORCE_COLOR; 'always' / "
+        "'never' force it on or off",
+    )
 
     # Output style/mode flags are mutually exclusive: the default UPPERCASE
     # text, HTML highlights, a plain grep-friendly slice, machine-readable
     # JSON/JSONL, or a bare count. (JSON snippets are already plain, so
     # combining --no-highlight with --json/--jsonl would be redundant.)
     group = ps.add_mutually_exclusive_group()
-    group.add_argument("--html", action="store_true",
-                    help="emit <mark>...</mark> HTML highlights instead of "
-                         "UPPERCASE")
-    group.add_argument("--no-highlight", action="store_true",
-                    dest="no_highlight",
-                    help="print a plain, grep-friendly leading slice of the "
-                         "body with no match markup")
-    group.add_argument("--json", action="store_true",
-                    help="emit machine-readable JSON output instead of "
-                         "human-readable text")
-    group.add_argument("--jsonl", "--ndjson", action="store_true",
-                    help="emit newline-delimited JSON (one object per hit)")
-    group.add_argument("--count", action="store_true",
-                    help="emit only the number of matching documents")
-    group.add_argument("-l", "--files-with-matches", action="store_true",
-                    dest="files_with_matches",
-                    help="print just matching file paths, one per line "
-                         "(grep -l style, newline-separated)")
+    group.add_argument(
+        "--html",
+        action="store_true",
+        help="emit <mark>...</mark> HTML highlights instead of UPPERCASE",
+    )
+    group.add_argument(
+        "--no-highlight",
+        action="store_true",
+        dest="no_highlight",
+        help="print a plain, grep-friendly leading slice of the "
+        "body with no match markup",
+    )
+    group.add_argument(
+        "--json",
+        action="store_true",
+        help="emit machine-readable JSON output instead of human-readable text",
+    )
+    group.add_argument(
+        "--jsonl",
+        "--ndjson",
+        action="store_true",
+        help="emit newline-delimited JSON (one object per hit)",
+    )
+    group.add_argument(
+        "--count",
+        action="store_true",
+        help="emit only the number of matching documents",
+    )
+    group.add_argument(
+        "-l",
+        "--files-with-matches",
+        action="store_true",
+        dest="files_with_matches",
+        help="print just matching file paths, one per line "
+        "(grep -l style, newline-separated)",
+    )
     ps.set_defaults(func=cmd_search)
 
-    pst = sub.add_parser("stats",
-                         help="show index summary (doc count, fields, size)")
-    pst.add_argument("directory", nargs="?", default=".",
-                     help="directory whose index to inspect (default: current)")
-    pst.add_argument("--json", action="store_true",
-                     help="emit machine-readable JSON output")
-    pst.add_argument("--top-terms", metavar="FIELD",
-                     help="show the most frequent indexed terms in FIELD")
-    pst.add_argument("--top", type=_check_positive_int, default=10,
-                     help="how many top terms to show (default: 10)")
+    pst = sub.add_parser("stats", help="show index summary (doc count, fields, size)")
+    pst.add_argument(
+        "directory",
+        nargs="?",
+        default=".",
+        help="directory whose index to inspect (default: current)",
+    )
+    pst.add_argument(
+        "--json", action="store_true", help="emit machine-readable JSON output"
+    )
+    pst.add_argument(
+        "--top-terms",
+        metavar="FIELD",
+        help="show the most frequent indexed terms in FIELD",
+    )
+    pst.add_argument(
+        "--top",
+        type=_check_positive_int,
+        default=10,
+        help="how many top terms to show (default: 10)",
+    )
     pst.set_defaults(func=cmd_stats)
     return p
 

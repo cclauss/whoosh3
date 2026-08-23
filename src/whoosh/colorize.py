@@ -1,4 +1,5 @@
 """Terminal color helpers for search match highlighting."""
+
 from __future__ import annotations
 
 import os

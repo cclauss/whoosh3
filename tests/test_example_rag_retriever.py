@@ -10,7 +10,9 @@ import pathlib
 
 import pytest
 
-_EXAMPLE = pathlib.Path(__file__).resolve().parent.parent / "examples" / "rag_retriever.py"
+_EXAMPLE = (
+    pathlib.Path(__file__).resolve().parent.parent / "examples" / "rag_retriever.py"
+)
 
 
 @pytest.fixture(scope="module")

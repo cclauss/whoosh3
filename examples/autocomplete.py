@@ -42,7 +42,9 @@ def build_index():
     """
     schema = Schema(
         title=TEXT(stored=True, spelling=True),
-        title_ngram=TEXT(analyzer=NgramWordAnalyzer(minsize=2, maxsize=8), phrase=False),
+        title_ngram=TEXT(
+            analyzer=NgramWordAnalyzer(minsize=2, maxsize=8), phrase=False
+        ),
         title_store=STORED,
     )
     ix = RamStorage().create_index(schema)

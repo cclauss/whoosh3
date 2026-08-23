@@ -310,7 +310,12 @@ class StopFilter(Filter):
     """
 
     def __init__(
-        self, stoplist: Iterable[str] | None = STOP_WORDS, minsize: int = 2, maxsize: int | None = None, renumber: bool = True, lang: str | None = None
+        self,
+        stoplist: Iterable[str] | None = STOP_WORDS,
+        minsize: int = 2,
+        maxsize: int | None = None,
+        renumber: bool = True,
+        lang: str | None = None,
     ) -> None:
         """
         :param stoplist: A collection of words to remove from the stream.
@@ -452,7 +457,13 @@ class DelimitedAttributeFilter(Filter):
     data as part of the token!
     """
 
-    def __init__(self, delimiter: str = "^", attribute: str = "boost", default: float = 1.0, type: type[Any] = float) -> None:
+    def __init__(
+        self,
+        delimiter: str = "^",
+        attribute: str = "boost",
+        default: float = 1.0,
+        type: type[Any] = float,
+    ) -> None:
         """
         :param delimiter: a string that, when present in a token's text,
             separates the actual text from the "data" payload.

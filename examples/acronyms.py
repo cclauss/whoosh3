@@ -103,8 +103,16 @@ def show_tech_tokenizer():
     print("=" * 72)
     ana = TechAnalyzer()
     for text in [
-        "R&D", "AT&T", "Q&A", "C++", "C#", "F#", ".NET",
-        "well-known", "e-mail", "foo.bar_baz",
+        "R&D",
+        "AT&T",
+        "Q&A",
+        "C++",
+        "C#",
+        "F#",
+        ".NET",
+        "well-known",
+        "e-mail",
+        "foo.bar_baz",
         "Our R&D team ships C++ and C# on .NET",
     ]:
         print(f"  {text!r:38} -> {tokens(ana, text)}")
@@ -120,7 +128,9 @@ def end_to_end_search():
     ix = RamStorage().create_index(schema)
     w = ix.writer()
     w.add_document(id="n1", body="Our R&D team evaluated C++ and C# for the .NET port.")
-    w.add_document(id="n2", body="Marketing and sales notes; nothing technical in here.")
+    w.add_document(
+        id="n2", body="Marketing and sales notes; nothing technical in here."
+    )
     w.commit()
 
     qp = QueryParser("body", ix.schema)

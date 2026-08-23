@@ -25,8 +25,7 @@
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of Matt Chaput.
 
-"""This module contains classes that allow reading from an index.
-"""
+"""This module contains classes that allow reading from an index."""
 
 from __future__ import annotations
 
@@ -264,9 +263,7 @@ class IndexReader:
 
         raise NotImplementedError
 
-    def terms_from(
-        self, fieldname: str, prefix: bytes
-    ) -> Iterable[tuple[str, bytes]]:
+    def terms_from(self, fieldname: str, prefix: bytes) -> Iterable[tuple[str, bytes]]:
         """Yields (fieldname, text) tuples for every term in the index starting
         at the given prefix.
         """
@@ -460,9 +457,7 @@ class IndexReader:
         raise NotImplementedError
 
     @abstractmethod
-    def doc_field_length(
-        self, docnum: int, fieldname: str, default: int = 0
-    ) -> int:
+    def doc_field_length(self, docnum: int, fieldname: str, default: int = 0) -> int:
         """Returns the number of terms in the given field in the given
         document. This is used by some scoring algorithms.
         """
@@ -878,7 +873,9 @@ class SegmentReader(IndexReader):
             if term[0] in schema
         )
 
-    def iter_from(self, fieldname: str, text: str | bytes) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
+    def iter_from(
+        self, fieldname: str, text: str | bytes
+    ) -> Iterator[tuple[tuple[str, bytes], TermInfo]]:
         self._test_field(fieldname)
         schema = self.schema
         text = self._text_to_bytes(fieldname, text)
@@ -938,7 +935,9 @@ class SegmentReader(IndexReader):
         fieldobj = self.schema[fieldname]
         return self._terms.cursor(fieldname, fieldobj)
 
-    def terms_within(self, fieldname: str, text: str, maxdist: int, prefix: int = 0) -> Iterable[str]:
+    def terms_within(
+        self, fieldname: str, text: str, maxdist: int, prefix: int = 0
+    ) -> Iterable[str]:
         # Replaces the horribly inefficient base implementation with one based
         # on skipping through the word list efficiently using a DFA
 
@@ -1067,9 +1066,7 @@ class EmptyReader(IndexReader):
     def max_field_length(self, fieldname: str) -> int:
         return 0
 
-    def doc_field_length(
-        self, docnum: int, fieldname: str, default: int = 0
-    ) -> int:
+    def doc_field_length(self, docnum: int, fieldname: str, default: int = 0) -> int:
         return default
 
     def postings(self, fieldname: str, text: str | bytes, scorer=None) -> Matcher:
@@ -1098,9 +1095,7 @@ class EmptyReader(IndexReader):
 class MultiReader(IndexReader):
     """Do not instantiate this object directly. Instead use Index.reader()."""
 
-    def __init__(
-        self, readers: list[IndexReader], generation: int | None = None
-    ):
+    def __init__(self, readers: list[IndexReader], generation: int | None = None):
         self.readers = readers
         self._gen = generation
         # An empty MultiReader (no sub-readers) has no schema; the common case
@@ -1233,9 +1228,7 @@ class MultiReader(IndexReader):
     def all_terms(self) -> Iterable[tuple[str, bytes]]:
         return self._merge_terms([iter(r.all_terms()) for r in self.readers])
 
-    def terms_from(
-        self, fieldname: str, prefix: bytes
-    ) -> Iterable[tuple[str, bytes]]:
+    def terms_from(self, fieldname: str, prefix: bytes) -> Iterable[tuple[str, bytes]]:
         return self._merge_terms(
             [iter(r.terms_from(fieldname, prefix)) for r in self.readers]
         )
@@ -1353,9 +1346,7 @@ class MultiReader(IndexReader):
     def max_field_length(self, fieldname: str) -> int:
         return max(r.max_field_length(fieldname) for r in self.readers)
 
-    def doc_field_length(
-        self, docnum: int, fieldname: str, default: int = 0
-    ) -> int:
+    def doc_field_length(self, docnum: int, fieldname: str, default: int = 0) -> int:
         segmentnum, segmentdoc = self._segment_and_docnum(docnum)
         reader = self.readers[segmentnum]
         return reader.doc_field_length(segmentdoc, fieldname, default=default)

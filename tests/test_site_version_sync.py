@@ -43,6 +43,5 @@ def test_maintained_page_latest_release_matches_package():
     assert m, "is-whoosh-still-maintained.html no longer names a whoosh3 release"
     assert m.group(1) == VERSION, (
         "is-whoosh-still-maintained.html advertises whoosh3 %r but package "
-        "version is %r; update the page when cutting a release."
-        % (m.group(1), VERSION)
+        "version is %r; update the page when cutting a release." % (m.group(1), VERSION)
     )

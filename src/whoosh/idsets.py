@@ -606,7 +606,9 @@ class BitSet(BaseBitSet):
             mask = 2**spill - 1
             bits[-1] = bits[-1] & mask
 
-    def _logic(self, obj: BitSet, op: Callable[[int, int], int], other: BitSet) -> BitSet:
+    def _logic(
+        self, obj: BitSet, op: Callable[[int, int], int], other: BitSet
+    ) -> BitSet:
         objbits = obj.bits
         for i, (byte1, byte2) in enumerate(
             zip_longest(objbits, other.bits, fillvalue=0)
@@ -707,7 +709,9 @@ class BitSet(BaseBitSet):
 class SortedIntSet(DocIdSet):
     """A DocIdSet backed by a sorted array of integers."""
 
-    def __init__(self, source: Iterable[int] | None = None, typecode: str = "I") -> None:
+    def __init__(
+        self, source: Iterable[int] | None = None, typecode: str = "I"
+    ) -> None:
         if source:
             self.data = array(typecode, sorted(source))
         else:

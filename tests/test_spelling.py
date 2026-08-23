@@ -474,11 +474,14 @@ def test_list_corrector_matches_brute_force():
         k = random.choice([1, 2])
         expected = set()
         for dist in range(1, k + 1):
-            expected |= {
-                w for w in words if w != typo and levenshtein(typo, w) <= dist
-            }
+            expected |= {w for w in words if w != typo and levenshtein(typo, w) <= dist}
         got = set(corr.suggest(typo, limit=1000, maxdist=k))
-        assert got == expected, (typo, k, sorted(expected - got), sorted(got - expected))
+        assert got == expected, (
+            typo,
+            k,
+            sorted(expected - got),
+            sorted(got - expected),
+        )
 
 
 def test_suggest_excludes_input_word():

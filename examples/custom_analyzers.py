@@ -82,9 +82,7 @@ def demo_substitution():
 
     # Fold internal punctuation so "wi-fi", "wi_fi" and "wifi" all match.
     analyzer = (
-        RegexTokenizer(r"\S+")
-        | SubstitutionFilter(r"[-_]", "")
-        | LowercaseFilter()
+        RegexTokenizer(r"\S+") | SubstitutionFilter(r"[-_]", "") | LowercaseFilter()
     )
     for word in ["Wi-Fi", "wi_fi", "WIFI"]:
         print(f"  {word!r:10} -> {tokens(analyzer, word)}")

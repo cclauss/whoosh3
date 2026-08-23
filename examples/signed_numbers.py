@@ -67,8 +67,14 @@ def show_targeted_tokenizer():
     print("=" * 70)
     print("2. A targeted tokenizer keeps signed numbers, not stray hyphens")
     print("=" * 70)
-    for text in ["balance -100 usd", "-5.5", "+7", "well-known", "e-mail",
-                 "2024-01-02"]:
+    for text in [
+        "balance -100 usd",
+        "-5.5",
+        "+7",
+        "well-known",
+        "e-mail",
+        "2024-01-02",
+    ]:
         print(f"  {text!r:18} -> {tokens(SIGNED_NUMBER_TOKENIZER, text)}")
     print("  => signed numbers survive; hyphenated words still split.")
     print("     (numeric hyphen sequences like dates -> use a DATETIME field)")

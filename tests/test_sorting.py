@@ -1193,9 +1193,7 @@ def test_sortable_numeric_float_user_default():
     # A user-supplied float default must also round-trip correctly.
     schema = fields.Schema(
         title=fields.TEXT(stored=True),
-        price=fields.NUMERIC(
-            sortable=True, numtype=float, default=0.0, stored=True
-        ),
+        price=fields.NUMERIC(sortable=True, numtype=float, default=0.0, stored=True),
     )
     with TempIndex(schema) as ix:
         with ix.writer() as w:

@@ -114,7 +114,9 @@ def run_benchmark(docs_n: int, queries_n: int, seed: int) -> dict:
     schema = make_schema()
     rng = random.Random(seed + 1)
     query_terms = [rng.choice(WORDS) for _ in range(queries_n)]
-    two_term = ["%s %s" % (rng.choice(WORDS), rng.choice(WORDS)) for _ in range(queries_n)]
+    two_term = [
+        "%s %s" % (rng.choice(WORDS), rng.choice(WORDS)) for _ in range(queries_n)
+    ]
 
     results: dict[str, float] = {}
     tmp = tempfile.mkdtemp(prefix="whoosh-bench-")
@@ -249,13 +251,13 @@ def compare(baseline: dict, current: dict, tolerance: float) -> int:
         if delta > tolerance:
             flag = "  <-- REGRESSION"
             regressed.append((name, delta))
-        print(
-            "  %-26s %12.2f %12.2f %+9.1f%%%s"
-            % (name, base, cur, delta * 100, flag)
-        )
+        print("  %-26s %12.2f %12.2f %+9.1f%%%s" % (name, base, cur, delta * 100, flag))
     print("-" * 72)
     if regressed:
-        print("\nFAIL: %d metric(s) regressed beyond %.0f%%:" % (len(regressed), tolerance * 100))
+        print(
+            "\nFAIL: %d metric(s) regressed beyond %.0f%%:"
+            % (len(regressed), tolerance * 100)
+        )
         for name, delta in regressed:
             print("  - %s (+%.1f%%)" % (name, delta * 100))
         return 1
@@ -266,9 +268,15 @@ def compare(baseline: dict, current: dict, tolerance: float) -> int:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--docs", type=int, default=5000, help="corpus size (default 5000)")
-    ap.add_argument("--queries", type=int, default=200, help="queries per query benchmark")
-    ap.add_argument("--seed", type=int, default=1234, help="RNG seed (keep fixed to compare)")
-    ap.add_argument("--json", metavar="FILE", help="write the run's results to FILE as JSON")
+    ap.add_argument(
+        "--queries", type=int, default=200, help="queries per query benchmark"
+    )
+    ap.add_argument(
+        "--seed", type=int, default=1234, help="RNG seed (keep fixed to compare)"
+    )
+    ap.add_argument(
+        "--json", metavar="FILE", help="write the run's results to FILE as JSON"
+    )
     ap.add_argument(
         "--compare",
         metavar="BASELINE.json",

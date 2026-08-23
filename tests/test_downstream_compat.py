@@ -103,12 +103,8 @@ def test_paperless_style_query_and_highlight():
     ix = _build_index(path)
 
     with ix.searcher(weighting=TF_IDF()) as s:
-        parser = MultifieldParser(
-            ["content", "title", "correspondent"], ix.schema
-        )
-        parser.add_plugin(
-            DateParserPlugin(basedate=datetime.datetime(2024, 6, 1))
-        )
+        parser = MultifieldParser(["content", "title", "correspondent"], ix.schema)
+        parser.add_plugin(DateParserPlugin(basedate=datetime.datetime(2024, 6, 1)))
 
         # Plain term query.
         results = s.search(parser.parse("invoice"))
@@ -125,9 +121,7 @@ def test_paperless_style_query_and_highlight():
         results.formatter = HtmlFormatter(
             tagname="span", classname="match", termclass="term"
         )
-        snippet = results[0].highlights(
-            "content", text="electricity invoice for march"
-        )
+        snippet = results[0].highlights("content", text="electricity invoice for march")
         assert "span" in snippet
 
 

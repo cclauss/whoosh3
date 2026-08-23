@@ -1019,7 +1019,9 @@ def test_multiterm_boost_propagates_to_score():
         mbase = s.search(query.Prefix("title", "ap", boost=1.0), limit=None)
         mboost = s.search(query.Prefix("title", "ap", boost=5.0), limit=None)
         assert len(mbase) == len(mboost) == 2
-        for hb, hn in zip(sorted(mboost, key=lambda h: h.docnum),
-                          sorted(mbase, key=lambda h: h.docnum)):
+        for hb, hn in zip(
+            sorted(mboost, key=lambda h: h.docnum),
+            sorted(mbase, key=lambda h: h.docnum),
+        ):
             # applied exactly once (not doubled by the wrapping Or)
             assert hb.score == pytest.approx(hn.score * 5.0)

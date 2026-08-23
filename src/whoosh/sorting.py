@@ -242,7 +242,9 @@ class FieldFacet(FacetType):
 
 
 class ColumnCategorizer(Categorizer):
-    def __init__(self, global_searcher: Searcher, fieldname: str, reverse: bool = False) -> None:
+    def __init__(
+        self, global_searcher: Searcher, fieldname: str, reverse: bool = False
+    ) -> None:
         self._fieldname = fieldname
         self._fieldobj = global_searcher.schema[self._fieldname]
         self._column_type = self._fieldobj.column_type
@@ -379,7 +381,9 @@ class PostingCategorizer(Categorizer):
     "negate" them to reverse the sort order).
     """
 
-    def __init__(self, global_searcher: Searcher, fieldname: str, reverse: bool) -> None:
+    def __init__(
+        self, global_searcher: Searcher, fieldname: str, reverse: bool
+    ) -> None:
         self.reverse = reverse
 
         if fieldname in global_searcher._field_caches:
@@ -721,7 +725,9 @@ class TranslateFacet(FacetType):
         return self.TranslateCategorizer(self.fn, catters)
 
     class TranslateCategorizer(Categorizer):
-        def __init__(self, fn: Callable[..., Any], catters: Sequence[Categorizer]) -> None:
+        def __init__(
+            self, fn: Callable[..., Any], catters: Sequence[Categorizer]
+        ) -> None:
             self.fn = fn
             self.catters = catters
 
@@ -981,7 +987,9 @@ class Facets:
         self.facets[fieldname] = FieldFacet(fieldname, **kwargs)
         return self
 
-    def add_query(self, name: str, querydict: dict[Any, Query], **kwargs: Any) -> Facets:
+    def add_query(
+        self, name: str, querydict: dict[Any, Query], **kwargs: Any
+    ) -> Facets:
         """Adds a :class:`QueryFacet` under the given ``name``.
 
         :param name: a name for the facet.
@@ -1000,7 +1008,9 @@ class Facets:
         self.facets[name] = facet
         return self
 
-    def add_facets(self, facets: Facets | dict[str, FacetType], replace: bool = True) -> Facets:
+    def add_facets(
+        self, facets: Facets | dict[str, FacetType], replace: bool = True
+    ) -> Facets:
         """Adds the contents of the given ``Facets`` or ``dict`` object to this
         object.
         """

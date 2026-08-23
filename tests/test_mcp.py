@@ -62,9 +62,13 @@ def test_from_directory_indexes_real_files(tmp_path):
 def test_from_directory_recurses_and_uses_relative_ids(tmp_path):
     sub = tmp_path / "topics"
     sub.mkdir()
-    (sub / "mcp.rst").write_text("Model Context Protocol tools for agents.\n", encoding="utf-8")
+    (sub / "mcp.rst").write_text(
+        "Model Context Protocol tools for agents.\n", encoding="utf-8"
+    )
     core = SearchCore.from_directory(str(tmp_path))
-    assert core.fetch(os.path.join("topics", "mcp.rst"))["title"].startswith("Model Context")
+    assert core.fetch(os.path.join("topics", "mcp.rst"))["title"].startswith(
+        "Model Context"
+    )
 
 
 def test_from_directory_empty_raises(tmp_path):

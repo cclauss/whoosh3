@@ -149,7 +149,11 @@ class SearchCore:
                     continue
                 rel = os.path.relpath(path, corpus_dir)
                 title = next(
-                    (ln.strip().lstrip("#").strip() for ln in text.splitlines() if ln.strip()),
+                    (
+                        ln.strip().lstrip("#").strip()
+                        for ln in text.splitlines()
+                        if ln.strip()
+                    ),
                     name,
                 )
                 docs.append({"id": rel, "title": title, "body": text})

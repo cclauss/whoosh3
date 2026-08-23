@@ -103,7 +103,9 @@ class CompositeAnalyzer(Analyzer):
             ", ".join(repr(item) for item in self.items),
         )
 
-    def __call__(self, value: str, no_morph: bool = False, **kwargs: Any) -> Iterator[Token]:
+    def __call__(
+        self, value: str, no_morph: bool = False, **kwargs: Any
+    ) -> Iterator[Token]:
         items = self.items
         # Start with tokenizer
         gen = items[0](value, **kwargs)
@@ -191,8 +193,8 @@ def StandardAnalyzer(
     expression: str = default_pattern,
     stoplist: Collection[str] | None = STOP_WORDS,
     minsize: int = 2,
-    maxsize:int | None = None,
-    gaps: bool = False
+    maxsize: int | None = None,
+    gaps: bool = False,
 ) -> Analyzer:
     """Composes a RegexTokenizer with a LowercaseFilter and optional
     StopFilter.
@@ -336,7 +338,7 @@ def LanguageAnalyzer(
     lang: str,
     expression: str = default_pattern,
     gaps: bool = False,
-    cachesize: int | None = 50000
+    cachesize: int | None = 50000,
 ) -> Analyzer:
     """Configures a simple analyzer for the given language, with a
     LowercaseFilter, StopFilter, and StemFilter.

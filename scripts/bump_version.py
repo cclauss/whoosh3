@@ -21,6 +21,7 @@ Usage
 After running, review ``git diff``, add a ``## [X.Y.Z]`` section to
 ``CHANGELOG.md``, commit everything together, then tag ``vX.Y.Z``.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -149,7 +150,10 @@ def main() -> int:
 
     set_version(args.version)
     print("Bumped package + site to %s" % args.version)
-    print("Now: update CHANGELOG.md, review `git diff`, commit, and tag v%s" % args.version)
+    print(
+        "Now: update CHANGELOG.md, review `git diff`, commit, and tag v%s"
+        % args.version
+    )
     return check(args.version)
 
 

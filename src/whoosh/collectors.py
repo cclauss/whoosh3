@@ -115,9 +115,7 @@ class Collector:
     # Populated by scoring/sorting subclasses; a list of (score, docnum) items.
     items: list
 
-    def prepare(
-        self, top_searcher: Searcher, q: Query, context: SearchContext
-    ) -> None:
+    def prepare(self, top_searcher: Searcher, q: Query, context: SearchContext) -> None:
         """This method is called before a search.
 
         Subclasses can override this to perform set-up work, but

@@ -215,6 +215,7 @@ if FastAPI is not None:
 # Run:  python fastapi_app.py
 # --------------------------------------------------------------------------
 
+
 def _demo() -> None:
     with tempfile.TemporaryDirectory() as tmp:
         idx = SearchIndex(index_dir=tmp)
@@ -222,7 +223,9 @@ def _demo() -> None:
             idx.upsert("1", "Getting started with Whoosh", "pure-python search library")
             idx.upsert("2", "FastAPI tutorial", "build python APIs quickly")
             # Upsert is idempotent: replacing id=1 does not duplicate it.
-            idx.upsert("1", "Getting started with Whoosh", "pure-python full-text search")
+            idx.upsert(
+                "1", "Getting started with Whoosh", "pure-python full-text search"
+            )
 
             out = idx.search("python", page=1, page_size=10)
             print(f"query={out['query']!r} total={out['total']}")

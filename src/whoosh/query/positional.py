@@ -206,7 +206,7 @@ class Phrase(qcore.Query):
         return f"{self.__class__.__name__}({self.fieldname!r}, {self.words!r}, slop={self.slop}, boost={self.boost:f})"
 
     def __str__(self) -> str:
-        return f"{self.fieldname}:\"{' '.join(self.words)}\""
+        return f'{self.fieldname}:"{" ".join(self.words)}"'
 
     def __hash__(self) -> int:
         h = hash(self.fieldname) ^ hash(self.slop) ^ hash(self.boost)

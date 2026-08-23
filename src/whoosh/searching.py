@@ -25,8 +25,7 @@
 # those of the authors and should not be interpreted as representing official
 # policies, either expressed or implied, of Matt Chaput.
 
-"""This module contains classes and functions related to searching the index.
-"""
+"""This module contains classes and functions related to searching the index."""
 
 from __future__ import annotations
 
@@ -683,9 +682,7 @@ class Searcher:
         results = self.search(query, limit=pagenum * pagelen, **kwargs)
         return ResultsPage(results, pagenum, pagelen)
 
-    def find(
-        self, defaultfield: str, querystring: str, **kwargs: Any
-    ) -> Results:
+    def find(self, defaultfield: str, querystring: str, **kwargs: Any) -> Results:
         """Parses ``querystring`` with a default
         :class:`whoosh.qparser.QueryParser` over ``defaultfield`` and runs the
         resulting query, returning a :class:`Results` object.
@@ -1717,9 +1714,7 @@ class ResultsPage:
 
     """
 
-    def __init__(
-        self, results: Results, pagenum: int, pagelen: int = 10
-    ) -> None:
+    def __init__(self, results: Results, pagenum: int, pagelen: int = 10) -> None:
         """
         :param results: a :class:`~whoosh.searching.Results` object.
         :param pagenum: which page of the results to use, numbered from ``1``.

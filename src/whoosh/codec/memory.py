@@ -90,9 +90,7 @@ class MemPerDocWriter(base.PerDocWriterWithColumns):
         # densely from docnum 0, so appending would clobber earlier docs'
         # values. We keep the raw values on the persistent MemSegment instead.
         self._segment._colobjs[fieldname] = column
-        self._colvalues[fieldname] = self._segment._colvalues.setdefault(
-            fieldname, {}
-        )
+        self._colvalues[fieldname] = self._segment._colvalues.setdefault(fieldname, {})
 
     def _get_column(self, fieldname):
         # Return a tiny shim exposing add(docnum, value) that records the value

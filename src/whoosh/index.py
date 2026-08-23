@@ -89,9 +89,7 @@ class EmptyIndexError(IndexError):
 # Convenience functions
 
 
-def create_in(
-    dirname: str, schema: Schema, indexname: str | None = None
-) -> FileIndex:
+def create_in(dirname: str, schema: Schema, indexname: str | None = None) -> FileIndex:
     """Convenience function to create an index in a directory. Takes care of
     creating a FileStorage object for you.
 

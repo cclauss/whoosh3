@@ -43,7 +43,9 @@ master_doc = "index"
 
 # General information about the project.
 project = "Whoosh"
-copyright = "2007-2012 Matt Chaput and contributors; maintained continuation by Priya Sundaram"
+copyright = (
+    "2007-2012 Matt Chaput and contributors; maintained continuation by Priya Sundaram"
+)
 
 # Canonical base URL for the published docs (helps search-engine indexing).
 html_baseurl = "https://priya-sundaram-dev.github.io/whoosh/docs/"

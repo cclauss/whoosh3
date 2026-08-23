@@ -22,9 +22,15 @@ from __future__ import annotations
 from whoosh.langchain import WhooshSearch, make_whoosh_retriever
 
 _DOCS = [
-    ("d1", "Whoosh is a fast, featureful pure-Python full-text indexing and search library."),
+    (
+        "d1",
+        "Whoosh is a fast, featureful pure-Python full-text indexing and search library.",
+    ),
     ("d2", "BM25 scores documents by term frequency and inverse document frequency."),
-    ("d3", "Dense vector retrieval matches on meaning but can miss rare literal tokens."),
+    (
+        "d3",
+        "Dense vector retrieval matches on meaning but can miss rare literal tokens.",
+    ),
     ("d4", "The billing service rejected the charge with error code ERR_2043."),
     ("d5", "Mitochondria are the powerhouse of the cell and generate ATP."),
 ]
@@ -51,7 +57,9 @@ def _demo() -> None:
         print(f"  (skipped) {exc}")
         return
     for doc in retriever.invoke(query):
-        print(f"  {doc.metadata['id']}  score={doc.metadata['score']:5.2f}  {doc.page_content[:60]}")
+        print(
+            f"  {doc.metadata['id']}  score={doc.metadata['score']:5.2f}  {doc.page_content[:60]}"
+        )
 
 
 if __name__ == "__main__":

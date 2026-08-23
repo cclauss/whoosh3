@@ -28,18 +28,38 @@ def build_index():
 
     # 3. Add documents, then commit.
     w = ix.writer()
-    w.add_document(id="1", title="Cheap red widget", tags="red,widget",
-                   price=5, added=datetime.datetime(2024, 1, 1))
-    w.add_document(id="2", title="Premium blue widget", tags="blue,widget,premium",
-                   price=50, added=datetime.datetime(2024, 6, 1))
-    w.add_document(id="3", title="Red gadget deluxe", tags="red,gadget",
-                   price=25, added=datetime.datetime(2024, 3, 1))
+    w.add_document(
+        id="1",
+        title="Cheap red widget",
+        tags="red,widget",
+        price=5,
+        added=datetime.datetime(2024, 1, 1),
+    )
+    w.add_document(
+        id="2",
+        title="Premium blue widget",
+        tags="blue,widget,premium",
+        price=50,
+        added=datetime.datetime(2024, 6, 1),
+    )
+    w.add_document(
+        id="3",
+        title="Red gadget deluxe",
+        tags="red,gadget",
+        price=25,
+        added=datetime.datetime(2024, 3, 1),
+    )
     w.commit()
 
     # update_document replaces the matching unique doc.
     w = ix.writer()
-    w.update_document(id="1", title="Cheap red widget v2", tags="red,widget",
-                      price=6, added=datetime.datetime(2024, 1, 2))
+    w.update_document(
+        id="1",
+        title="Cheap red widget v2",
+        tags="red,widget",
+        price=6,
+        added=datetime.datetime(2024, 1, 2),
+    )
     w.commit()
     return ix
 

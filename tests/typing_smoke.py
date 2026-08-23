@@ -313,11 +313,15 @@ def run() -> list[str]:
 
         # whoosh.classify public API (gh#59): ExpansionModel subclasses and
         # Expander are annotated so downstream query-expansion code type-checks.
-        model: classify.ExpansionModel = classify.Bo1Model(doc_count=2, field_length=10.0)
+        model: classify.ExpansionModel = classify.Bo1Model(
+            doc_count=2, field_length=10.0
+        )
         norm: float = model.normalizer(maxweight=1.0, top_total=4.0)
         expansion_score: float = model.score(1.0, 2.0, 4)
         assert isinstance(norm, float) and isinstance(expansion_score, float)
-        expander = classify.Expander(searcher.reader(), "title", model=classify.Bo1Model)
+        expander = classify.Expander(
+            searcher.reader(), "title", model=classify.Bo1Model
+        )
         expander.add([("search", 1.0)])
         expanded: list[tuple[str, float]] = expander.expanded_terms(3)
         assert isinstance(expanded, list)
@@ -332,7 +336,9 @@ def run() -> list[str]:
         list_corr: spelling.Corrector = spelling.ListCorrector(
             ["indexing", "search", "searching"]
         )
-        suggestions: list[str] = list_corr.suggest("serch", limit=3, maxdist=2, prefix=1)
+        suggestions: list[str] = list_corr.suggest(
+            "serch", limit=3, maxdist=2, prefix=1
+        )
         assert isinstance(suggestions, list)
         assert all(isinstance(s, str) for s in suggestions)
 
@@ -499,7 +505,9 @@ def run() -> list[str]:
     tok_norm = NormalizingRegexTokenizer()
     tok_path = PathTokenizer()
     assert list(tok_id("test")) and list(tok_norm("test")) and list(tok_path("a/b"))
-    assert list(SpaceSeparatedTokenizer()("a b")) and list(CommaSeparatedTokenizer()("a,b"))
+    assert list(SpaceSeparatedTokenizer()("a b")) and list(
+        CommaSeparatedTokenizer()("a,b")
+    )
 
     # whoosh.analysis.filters public API (gh#76)
     tokenizer = RegexTokenizer()
@@ -521,7 +529,9 @@ def run() -> list[str]:
     sub_tokens: Iterator[Token] = sub_filter(tokenizer("self-aware pre-built"))
     assert all(isinstance(tok, Token) for tok in sub_tokens)
     # DelimitedAttributeFilter: delimiter, attribute, default, type
-    daf = DelimitedAttributeFilter(delimiter="^", attribute="boost", default=1.0, type=float)
+    daf = DelimitedAttributeFilter(
+        delimiter="^", attribute="boost", default=1.0, type=float
+    )
     daf_tokens: Iterator[Token] = daf(tokenizer("image render^2 file^0.5"))
     assert all(isinstance(tok, Token) for tok in daf_tokens)
     # PassFilter: passes tokens through unchanged

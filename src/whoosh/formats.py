@@ -90,7 +90,9 @@ class Format:
             return None
         return self.posting_size
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         """Takes the text value to be indexed and yields a series of
         ("tokentext", frequency, weight, valuestring) tuples, where frequency
         is the number of times "tokentext" appeared in the value, weight is the
@@ -157,7 +159,9 @@ class Existence(Format):
         self.field_boost = field_boost
         self.options = options
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         fb = self.field_boost
         wordset = {t.text for t in tokens(value, analyzer, kwargs)}
         return ((w, 1, fb, emptybytes) for w in wordset)
@@ -184,7 +188,9 @@ class Frequency(Format):
     posting_size = _INT_SIZE
     __inittypes__ = {"field_boost": float, "boost_as_freq": bool}
 
-    def __init__(self, field_boost: float = 1.0, boost_as_freq: bool = False, **options: Any) -> None:
+    def __init__(
+        self, field_boost: float = 1.0, boost_as_freq: bool = False, **options: Any
+    ) -> None:
         """
         :param field_boost: A constant boost factor to scale to the score of
             all queries matching terms in this field.
@@ -194,7 +200,9 @@ class Frequency(Format):
         self.field_boost = field_boost
         self.options = options
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         fb = self.field_boost
         length = 0
         freqs: dict[Any, int] = defaultdict(int)
@@ -228,7 +236,9 @@ class Positions(Format):
     position boost = 1.0).
     """
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         fb = self.field_boost
         poses = defaultdict(list)
         weights: dict[Any, float] = defaultdict(float)
@@ -285,7 +295,9 @@ class Characters(Positions):
     position boost = 1.0), characters.
     """
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         fb = self.field_boost
         seen = defaultdict(list)
         weights: dict[Any, float] = defaultdict(float)
@@ -356,7 +368,9 @@ class PositionBoosts(Positions):
     Supports: frequency, weight, positions, position_boosts.
     """
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         fb = self.field_boost
         seen = defaultdict(list)
 
@@ -423,7 +437,9 @@ class CharacterBoosts(Characters):
     character_boosts.
     """
 
-    def word_values(self, value: Any, analyzer: Any, **kwargs: Any) -> Iterable[tuple[bytes, int, float, bytes]]:
+    def word_values(
+        self, value: Any, analyzer: Any, **kwargs: Any
+    ) -> Iterable[tuple[bytes, int, float, bytes]]:
         seen = defaultdict(list)
 
         kwargs["positions"] = True
@@ -456,7 +472,9 @@ class CharacterBoosts(Characters):
             summedboost,
         )
 
-    def decode_character_boosts(self, valuestring: bytes) -> list[tuple[int, int, int, float]]:
+    def decode_character_boosts(
+        self, valuestring: bytes
+    ) -> list[tuple[int, int, int, float]]:
         if not valuestring.endswith(b"."):
             valuestring += b"."
         codes = loads(valuestring[_INT_SIZE + _FLOAT_SIZE :])

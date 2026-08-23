@@ -595,12 +595,15 @@ def test_field_terms_numeric_and_datetime():
     )
     with TempIndex(schema, "fieldterms_numeric") as ix:
         with ix.writer() as w:
-            w.add_document(doc_id="A1", when=datetime(2020, 1, 1), price=15,
-                           content="alpha beta")
-            w.add_document(doc_id="B2", when=datetime(1985, 3, 15), price=3,
-                           content="beta gamma")
-            w.add_document(doc_id="C3", when=datetime(1977, 1, 1), price=42,
-                           content="delta")
+            w.add_document(
+                doc_id="A1", when=datetime(2020, 1, 1), price=15, content="alpha beta"
+            )
+            w.add_document(
+                doc_id="B2", when=datetime(1985, 3, 15), price=3, content="beta gamma"
+            )
+            w.add_document(
+                doc_id="C3", when=datetime(1977, 1, 1), price=42, content="delta"
+            )
 
         with ix.reader() as r:
             # DATETIME: exactly the three inserted dates, no OverflowError.
@@ -613,6 +616,9 @@ def test_field_terms_numeric_and_datetime():
             assert sorted(r.field_terms("price")) == [3, 15, 42]
             # Ordinary text/id fields keep returning their full lexicon.
             assert sorted(r.field_terms("content")) == [
-                "alpha", "beta", "delta", "gamma",
+                "alpha",
+                "beta",
+                "delta",
+                "gamma",
             ]
             assert sorted(r.field_terms("doc_id")) == ["A1", "B2", "C3"]

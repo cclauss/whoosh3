@@ -29,7 +29,6 @@
 This module contains classes for scoring (and sorting) search results.
 """
 
-
 from __future__ import annotations
 
 from math import log, pi
@@ -63,7 +62,9 @@ class WeightingModel:
         dc = parent.doc_count_all()
         return log(dc / (n + 1)) + 1
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> BaseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> BaseScorer:
         """Returns an instance of :class:`whoosh.scoring.Scorer` configured
         for the given searcher, fieldname, and term text.
         """
@@ -234,12 +235,16 @@ class DebugModel(WeightingModel):
     def __init__(self) -> None:
         self.log: list[Any] = []
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> DebugScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> DebugScorer:
         return DebugScorer(searcher, fieldname, text, self.log)
 
 
 class DebugScorer(BaseScorer):
-    def __init__(self, searcher: Any, fieldname: str, text: str, log: list[Any]) -> None:
+    def __init__(
+        self, searcher: Any, fieldname: str, text: str, log: list[Any]
+    ) -> None:
         ti = searcher.term_info(fieldname, text)
         self._maxweight: float = ti.max_weight()
 
@@ -307,7 +312,9 @@ class BM25F(WeightingModel):
     def supports_block_quality(self) -> bool:
         return True
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> BaseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> BaseScorer:
         if not searcher.schema[fieldname].scorable:
             return WeightScorer.for_(searcher, fieldname, text)
 
@@ -320,7 +327,9 @@ class BM25F(WeightingModel):
 
 
 class BM25FScorer(WeightLengthScorer):
-    def __init__(self, searcher: Any, fieldname: str, text: str, B: float, K1: float, qf: int = 1) -> None:
+    def __init__(
+        self, searcher: Any, fieldname: str, text: str, B: float, K1: float, qf: int = 1
+    ) -> None:
         # IDF and average field length are global statistics, so get them from
         # the top-level searcher
         parent = searcher.get_parent()  # Returns self if no parent
@@ -371,7 +380,9 @@ class DFree(WeightingModel):
     def supports_block_quality(self) -> bool:
         return True
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> BaseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> BaseScorer:
         if not searcher.schema[fieldname].scorable:
             return WeightScorer.for_(searcher, fieldname, text)
 
@@ -398,7 +409,9 @@ class DFreeScorer(WeightLengthScorer):
 rec_log2_of_e = 1.0 / log(2)
 
 
-def pl2(tf: float, cf: float, qf: float, dc: int, fl: float, avgfl: float, c: float) -> float:
+def pl2(
+    tf: float, cf: float, qf: float, dc: int, fl: float, avgfl: float, c: float
+) -> float:
     # tf - term frequency in the current document
     # cf - term frequency in the collection
     # qf - term frequency in the query
@@ -431,7 +444,9 @@ class PL2(WeightingModel):
     def __init__(self, c: float = 1.0) -> None:
         self.c = c
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> BaseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> BaseScorer:
         if not searcher.schema[fieldname].scorable:
             return WeightScorer.for_(searcher, fieldname, text)
 
@@ -439,7 +454,9 @@ class PL2(WeightingModel):
 
 
 class PL2Scorer(WeightLengthScorer):
-    def __init__(self, searcher: Any, fieldname: str, text: str, c: float, qf: int = 1) -> None:
+    def __init__(
+        self, searcher: Any, fieldname: str, text: str, c: float, qf: int = 1
+    ) -> None:
         # Total term weight, document count, and average field length are
         # global statistics, so get them from the top-level searcher
         parent = searcher.get_parent()  # Returns self if no parent
@@ -459,13 +476,17 @@ class PL2Scorer(WeightLengthScorer):
 
 
 class Frequency(WeightingModel):
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> WeightScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> WeightScorer:
         maxweight = searcher.term_info(fieldname, text).max_weight()
         return WeightScorer(maxweight)
 
 
 class TF_IDF(WeightingModel):
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> TF_IDFScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> TF_IDFScorer:
         # IDF is a global statistic, so get it from the top-level searcher
         parent = searcher.get_parent()  # Returns self if no parent
         idf = parent.idf(fieldname, text)
@@ -501,14 +522,24 @@ class Weighting(WeightingModel):
     rewritten.
     """
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> Weighting.CompatibilityScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> Weighting.CompatibilityScorer:
         return self.CompatibilityScorer(searcher, fieldname, text, self.score)
 
-    def score(self, searcher: Any, fieldname: str, text: str, docnum: int, weight: float) -> float:
+    def score(
+        self, searcher: Any, fieldname: str, text: str, docnum: int, weight: float
+    ) -> float:
         raise NotImplementedError
 
     class CompatibilityScorer(BaseScorer):
-        def __init__(self, searcher: Any, fieldname: str, text: str, scoremethod: Callable[..., float]) -> None:
+        def __init__(
+            self,
+            searcher: Any,
+            fieldname: str,
+            text: str,
+            scoremethod: Callable[..., float],
+        ) -> None:
             self.searcher = searcher
             self.fieldname = fieldname
             self.text = text
@@ -549,11 +580,20 @@ class FunctionWeighting(WeightingModel):
     def __init__(self, fn: Callable[..., float]) -> None:
         self.fn = fn
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> FunctionWeighting.FunctionScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> FunctionWeighting.FunctionScorer:
         return self.FunctionScorer(self.fn, searcher, fieldname, text, qf=qf)
 
     class FunctionScorer(BaseScorer):
-        def __init__(self, fn: Callable[..., float], searcher: Any, fieldname: str, text: str, qf: int = 1) -> None:
+        def __init__(
+            self,
+            fn: Callable[..., float],
+            searcher: Any,
+            fieldname: str,
+            text: str,
+            qf: int = 1,
+        ) -> None:
             self.fn = fn
             self.searcher = searcher
             self.fieldname = fieldname
@@ -585,7 +625,9 @@ class MultiWeighting(WeightingModel):
         # Store weighting functions by field name
         self.weightings = weightings
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> BaseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> BaseScorer:
         w = self.weightings.get(fieldname, self.default)
         return w.scorer(searcher, fieldname, text, qf=qf)
 
@@ -598,7 +640,9 @@ class ReverseWeighting(WeightingModel):
     def __init__(self, weighting: WeightingModel) -> None:
         self.weighting = weighting
 
-    def scorer(self, searcher: Any, fieldname: str, text: str, qf: int = 1) -> ReverseWeighting.ReverseScorer:
+    def scorer(
+        self, searcher: Any, fieldname: str, text: str, qf: int = 1
+    ) -> ReverseWeighting.ReverseScorer:
         subscorer = self.weighting.scorer(searcher, fieldname, text, qf=qf)
         return ReverseWeighting.ReverseScorer(subscorer)
 

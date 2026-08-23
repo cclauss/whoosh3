@@ -54,7 +54,7 @@ def build_index(directory, indexdir="site_index"):
         path=ID(stored=True, unique=True),
         url=STORED,
         title=TEXT(stored=True, field_boost=2.0),
-        body=TEXT(stored=True)
+        body=TEXT(stored=True),
     )
 
     ix = create_in(indexdir, schema)
@@ -62,7 +62,11 @@ def build_index(directory, indexdir="site_index"):
     with ix.writer() as writer:
         for root, dirs, files in os.walk(directory):
             for file in files:
-                if file.endswith(".md") or file.endswith(".rst") or file.endswith(".txt"):
+                if (
+                    file.endswith(".md")
+                    or file.endswith(".rst")
+                    or file.endswith(".txt")
+                ):
                     filepath = os.path.join(root, file)
                     with open(filepath, encoding="utf-8", errors="ignore") as f:
                         content = f.read()
@@ -75,10 +79,7 @@ def build_index(directory, indexdir="site_index"):
                     url = pathname2url(rel_path)
 
                     writer.update_document(
-                        path=filepath,
-                        url=url,
-                        title=title,
-                        body=clean_body
+                        path=filepath, url=url, title=title, body=clean_body
                     )
     print(f"Indexed {ix.doc_count()} documents in '{indexdir}'.")
 
@@ -115,9 +116,10 @@ def search_index(query_string, indexdir="site_index"):
 
 class ConsoleFormatter(Formatter):
     """A simple formatter that uses uppercase instead of HTML for highlights."""
+
     def format_token(self, text, token, chardata):
         # Simply uppercase the matched word
-        return text[token.startchar:token.endchar].upper()
+        return text[token.startchar : token.endchar].upper()
 
 
 if __name__ == "__main__":

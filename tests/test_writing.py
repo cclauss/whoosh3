@@ -275,8 +275,7 @@ def test_buffered_sortable_columns():
         with w.searcher() as s:
             asc = [h["id"] for h in s.search(query.Every(), sortedby="num")]
             desc = [
-                h["id"]
-                for h in s.search(query.Every(), sortedby="num", reverse=True)
+                h["id"] for h in s.search(query.Every(), sortedby="num", reverse=True)
             ]
             assert asc == list(range(10))
             assert desc == list(range(9, -1, -1))

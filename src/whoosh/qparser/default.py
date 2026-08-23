@@ -363,7 +363,9 @@ class QueryParser:
         nodes = self.filterize(nodes, debug=debug)
         return nodes
 
-    def parse(self, text: str, normalize: bool = True, debug: bool = False) -> query.Query:
+    def parse(
+        self, text: str, normalize: bool = True, debug: bool = False
+    ) -> query.Query:
         """Parses the input string and returns a :class:`whoosh.query.Query`
         object/tree.
 

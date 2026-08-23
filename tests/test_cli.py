@@ -99,8 +99,9 @@ def test_incremental_update_detects_changes(corpus, capsys):
     capsys.readouterr()
 
     # Add a new file and re-index incrementally.
-    (corpus / "delta.txt").write_text("A brand new document about pandas.\n",
-                                       encoding="utf-8")
+    (corpus / "delta.txt").write_text(
+        "A brand new document about pandas.\n", encoding="utf-8"
+    )
     rc = run(["index", corpus, "--update"])
     assert rc == 0
     out = capsys.readouterr().out
@@ -226,16 +227,17 @@ def test_resolve_exts_normalizes():
     assert cli._resolve_exts("") == cli.DEFAULT_EXTS
 
 
-@pytest.mark.parametrize("raw,expected", [
-    ("1024", 1024),
-    ("500k", 500 * 1024),
-    ("500K", 500 * 1024),
-    ("10MB", 10 * 1024 * 1024),
-    ("2g", 2 * 1024 ** 3),
-    ("2Gb", 2 * 1024 ** 3),
-])
-
-
+@pytest.mark.parametrize(
+    "raw,expected",
+    [
+        ("1024", 1024),
+        ("500k", 500 * 1024),
+        ("500K", 500 * 1024),
+        ("10MB", 10 * 1024 * 1024),
+        ("2g", 2 * 1024**3),
+        ("2Gb", 2 * 1024**3),
+    ],
+)
 def test_parse_size_valid(raw, expected):
     assert cli._parse_size(raw) == expected
 
@@ -300,8 +302,7 @@ def test_search_json_no_matches_remains_array(corpus, capsys):
 
 
 @pytest.mark.parametrize("flag", ["--jsonl", "--ndjson"])
-@pytest.mark.parametrize(
-    "other", ["--json", "--html", "--no-highlight", "--count"])
+@pytest.mark.parametrize("other", ["--json", "--html", "--no-highlight", "--count"])
 def test_search_jsonl_is_mutually_exclusive(corpus, capsys, flag, other):
     with pytest.raises(SystemExit):
         run(["search", "whoosh", corpus, flag, other])
@@ -312,10 +313,18 @@ def test_search_jsonl_is_mutually_exclusive(corpus, capsys, flag, other):
 def test_search_jsonl_fields_and_limit(corpus, capsys):
     assert run(["index", corpus]) == 0
     capsys.readouterr()
-    rc = run([
-        "search", "search", corpus, "--jsonl", "--fields", "path",
-        "--limit", "1",
-    ])
+    rc = run(
+        [
+            "search",
+            "search",
+            corpus,
+            "--jsonl",
+            "--fields",
+            "path",
+            "--limit",
+            "1",
+        ]
+    )
     assert rc == 0
     lines = capsys.readouterr().out.splitlines()
     assert len(lines) == 1
@@ -327,7 +336,6 @@ def test_search_mutually_exclusive_json_html(corpus, capsys):
         run(["search", "whoosh", corpus, "--json", "--html"])
     err = capsys.readouterr().err
     assert "not allowed with argument" in err.lower()
-
 
 
 def test_search_limit_invalid(corpus, capsys):
@@ -353,16 +361,40 @@ def test_search_pages_cover_the_same_hits_as_one_large_page(corpus, capsys):
 
     pages = []
     for page in (1, 2):
-        assert run([
-            "search", "search", corpus, "--json", "--fields", "path",
-            "--limit", "1", "--page", str(page),
-        ]) == 0
+        assert (
+            run(
+                [
+                    "search",
+                    "search",
+                    corpus,
+                    "--json",
+                    "--fields",
+                    "path",
+                    "--limit",
+                    "1",
+                    "--page",
+                    str(page),
+                ]
+            )
+            == 0
+        )
         pages.extend(json.loads(capsys.readouterr().out))
 
-    assert run([
-        "search", "search", corpus, "--json", "--fields", "path",
-        "--limit", "2",
-    ]) == 0
+    assert (
+        run(
+            [
+                "search",
+                "search",
+                corpus,
+                "--json",
+                "--fields",
+                "path",
+                "--limit",
+                "2",
+            ]
+        )
+        == 0
+    )
     all_at_once = json.loads(capsys.readouterr().out)
     assert pages == all_at_once
 
@@ -390,9 +422,21 @@ def test_search_page_beyond_last_is_empty(corpus, capsys):
     assert run(["search", "search", corpus, "--limit", "1", "--page", "3"]) == 1
     assert "No matches" in capsys.readouterr().out
 
-    assert run([
-        "search", "search", corpus, "--json", "--limit", "1", "--page", "3",
-    ]) == 1
+    assert (
+        run(
+            [
+                "search",
+                "search",
+                corpus,
+                "--json",
+                "--limit",
+                "1",
+                "--page",
+                "3",
+            ]
+        )
+        == 1
+    )
     assert capsys.readouterr().out == "[]\n"
 
 
@@ -416,10 +460,20 @@ def test_search_field_restricts_query(corpus, capsys):
     assert run(["search", "whoosh", corpus, "--field", "body"]) == 0
     assert "beta.md" in capsys.readouterr().out
 
-    assert run([
-        "search", "whoosh", corpus,
-        "--field", "title", "--field", "body",
-    ]) == 0
+    assert (
+        run(
+            [
+                "search",
+                "whoosh",
+                corpus,
+                "--field",
+                "title",
+                "--field",
+                "body",
+            ]
+        )
+        == 0
+    )
     assert "beta.md" in capsys.readouterr().out
 
 
@@ -463,6 +517,7 @@ def test_search_fields_text(corpus, capsys):
     assert "path:" in out
     assert "score" not in out
 
+
 def test_search_count(corpus, capsys):
     assert run(["index", corpus]) == 0
     capsys.readouterr()
@@ -491,8 +546,7 @@ def test_search_or_with_field(corpus, capsys):
     # --or must also apply when an explicit --field is selected.
     assert run(["index", corpus]) == 0
     capsys.readouterr()
-    rc = run(["search", "fox search", corpus, "--field", "body",
-              "--or", "--count"])
+    rc = run(["search", "fox search", corpus, "--field", "body", "--or", "--count"])
     assert rc == 0
     assert capsys.readouterr().out.strip() == "2"
 
@@ -540,12 +594,10 @@ def test_search_count_respects_min_score(corpus, capsys):
     assert run(["search", "search", corpus, "--count"]) == 0
     assert capsys.readouterr().out.strip() == "2"
     # Unreachable floor -> zero.
-    assert run(["search", "search", corpus, "--count",
-                "--min-score", "9999"]) == 0
+    assert run(["search", "search", corpus, "--count", "--min-score", "9999"]) == 0
     assert capsys.readouterr().out.strip() == "0"
     # Zero floor keeps every match.
-    assert run(["search", "search", corpus, "--count",
-                "--min-score", "0"]) == 0
+    assert run(["search", "search", corpus, "--count", "--min-score", "0"]) == 0
     assert capsys.readouterr().out.strip() == "2"
 
 
@@ -572,6 +624,7 @@ def test_search_summary_all_shown(corpus, capsys):
     assert "matches for" in out
     assert "match." not in out
 
+
 def test_search_summary_truncated(corpus, capsys):
     assert run(["index", corpus]) == 0
     capsys.readouterr()
@@ -582,8 +635,10 @@ def test_search_summary_truncated(corpus, capsys):
     assert "matches for" in out
     assert "Showing" not in out
 
+
 def test_version_flag(capsys):
     from whoosh import __version_str__
+
     with pytest.raises(SystemExit) as excinfo:
         run(["--version"])
     assert excinfo.value.code == 0
@@ -594,6 +649,7 @@ def test_version_flag(capsys):
 
 def test_version_flag_short(capsys):
     from whoosh import __version_str__
+
     with pytest.raises(SystemExit) as excinfo:
         run(["-V"])
     assert excinfo.value.code == 0
@@ -784,6 +840,7 @@ def test_human_bytes():
     assert cli._human_bytes(1536).endswith("KB")
     assert cli._human_bytes(5 * 1024 * 1024).endswith("MB")
 
+
 def test_sort_by_mtime_orders_newest_first(tmp_path, capsys):
     (tmp_path / "old.txt").write_text("shared search term", encoding="utf-8")
     time.sleep(1.1)
@@ -799,8 +856,7 @@ def test_sort_by_mtime_orders_newest_first(tmp_path, capsys):
     rc = run(["search", "shared", tmp_path, "--sort-by", "mtime", "--jsonl"])
     assert rc == 0
     paths = [
-        hit["path"]
-        for hit in map(json.loads, capsys.readouterr().out.splitlines())
+        hit["path"] for hit in map(json.loads, capsys.readouterr().out.splitlines())
     ]
     assert paths.index("new.txt") < paths.index("old.txt")
 
@@ -896,10 +952,22 @@ def test_search_null_no_matches_and_out_of_range_are_silent(corpus, capsys):
     assert run(["search", "zzzznottherezzz", corpus, "-l", "-0"]) == 1
     assert capsys.readouterr() == ("", "")
 
-    assert run([
-        "search", "search", corpus, "-l", "-0", "--limit", "1",
-        "--page", "3",
-    ]) == 1
+    assert (
+        run(
+            [
+                "search",
+                "search",
+                corpus,
+                "-l",
+                "-0",
+                "--limit",
+                "1",
+                "--page",
+                "3",
+            ]
+        )
+        == 1
+    )
     assert capsys.readouterr() == ("", "")
 
 
@@ -914,8 +982,9 @@ def test_index_follow_symlinks_includes_symlinked_directories(tmp_path, capsys):
     target = tmp_path / ".." / "outside_content"
     target = target.resolve()
     target.mkdir(parents=True, exist_ok=True)
-    (target / "outside.txt").write_text("secret content behind symlink",
-                                       encoding="utf-8")
+    (target / "outside.txt").write_text(
+        "secret content behind symlink", encoding="utf-8"
+    )
 
     # Symlink inside the indexed root pointing outside -> ../outside_content/
     link = tmp_path / "link_to_outside"
@@ -945,8 +1014,9 @@ def test_index_follow_symlinks_dry_run_matches_real_run(tmp_path, capsys):
     target = tmp_path / ".." / "outside_content"
     target = target.resolve()
     target.mkdir(parents=True, exist_ok=True)
-    (target / "outside.txt").write_text("secret content behind symlink",
-                                       encoding="utf-8")
+    (target / "outside.txt").write_text(
+        "secret content behind symlink", encoding="utf-8"
+    )
     link = tmp_path / "link_to_outside"
     os.symlink(target, link, target_is_directory=True)
 

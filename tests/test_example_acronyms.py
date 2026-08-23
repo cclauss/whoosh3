@@ -58,7 +58,15 @@ def test_tech_analyzer_does_not_regress_hyphenation(ex):
 def test_tech_analyzer_in_a_sentence(ex):
     ana = ex.TechAnalyzer()
     assert ex.tokens(ana, "Our R&D team ships C++ and C# on .NET") == [
-        "our", "r&d", "team", "ships", "c++", "and", "c#", "on", ".net",
+        "our",
+        "r&d",
+        "team",
+        "ships",
+        "c++",
+        "and",
+        "c#",
+        "on",
+        ".net",
     ]
 
 
@@ -67,7 +75,9 @@ def test_end_to_end_search_finds_acronyms(ex):
     ix = RamStorage().create_index(schema)
     w = ix.writer()
     w.add_document(id="n1", body="Our R&D team evaluated C++ and C# for the .NET port.")
-    w.add_document(id="n2", body="Marketing and sales notes; nothing technical in here.")
+    w.add_document(
+        id="n2", body="Marketing and sales notes; nothing technical in here."
+    )
     w.commit()
     qp = QueryParser("body", ix.schema)
     with ix.searcher() as s:

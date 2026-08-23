@@ -40,11 +40,26 @@ from whoosh.qparser import MultifieldParser, OrGroup
 # store a stable `id` for each so you can join back to your vector store.
 # --------------------------------------------------------------------------
 CHUNKS = [
-    ("c1", "Routine car maintenance: check the engine oil, tyre pressure and brakes every few months."),
-    ("c2", "Python is a popular programming language for data science and machine learning."),
-    ("c3", "Cellular respiration converts glucose into ATP energy inside the mitochondria."),
-    ("c4", "Vector databases store embeddings so you can run semantic similarity search."),
-    ("c5", "Troubleshooting guide: error ERR_2043 means the payment gateway rejected the token."),
+    (
+        "c1",
+        "Routine car maintenance: check the engine oil, tyre pressure and brakes every few months.",
+    ),
+    (
+        "c2",
+        "Python is a popular programming language for data science and machine learning.",
+    ),
+    (
+        "c3",
+        "Cellular respiration converts glucose into ATP energy inside the mitochondria.",
+    ),
+    (
+        "c4",
+        "Vector databases store embeddings so you can run semantic similarity search.",
+    ),
+    (
+        "c5",
+        "Troubleshooting guide: error ERR_2043 means the payment gateway rejected the token.",
+    ),
     ("c6", "The mitochondria is often called the powerhouse of the cell."),
 ]
 
@@ -169,8 +184,12 @@ def _demo():
     #    BM25 has no literal term to match; the dense stand-in bridges meaning.
     q1 = "automobile servicing"
     print(f"\nQuery: {q1!r}")
-    print(f"  BM25 (lexical): {keyword_search(ix, q1)}   <- misses c1 (no word 'automobile')")
-    print(f"  Dense (stand-in): {vector_search(q1)}   <- bridges 'automobile' -> car chunk")
+    print(
+        f"  BM25 (lexical): {keyword_search(ix, q1)}   <- misses c1 (no word 'automobile')"
+    )
+    print(
+        f"  Dense (stand-in): {vector_search(q1)}   <- bridges 'automobile' -> car chunk"
+    )
     print(f"  Hybrid (RRF):   {hybrid_search(ix, q1)}   <- recovers c1")
 
     # 2) A rare literal token: an error code the embedding model never learned.
@@ -178,7 +197,9 @@ def _demo():
     q2 = "ERR_2043 rejected token"
     print(f"\nQuery: {q2!r}")
     print(f"  BM25 (lexical): {keyword_search(ix, q2)}   <- nails c5 on the exact code")
-    print(f"  Dense (stand-in): {vector_search(q2)}   <- misses: no concept for a rare code")
+    print(
+        f"  Dense (stand-in): {vector_search(q2)}   <- misses: no concept for a rare code"
+    )
     print(f"  Hybrid (RRF):   {hybrid_search(ix, q2)}   <- keeps c5 on top")
 
     # 3) Assemble a context window for the LLM from the fused top-k.
