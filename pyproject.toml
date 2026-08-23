@@ -1,28 +1,30 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
+requires = [ "setuptools>=61" ]
 
 [project]
 name = "whoosh3"
-dynamic = ["version"]
-description = "Fast, pure-Python full-text indexing, search, and spell-checking library — the actively maintained Whoosh, running on Python 3.9-3.14."
+description = """\
+  Fast, pure-Python full-text indexing, search, and spell-checking library — the actively maintained Whoosh, running \
+  on Python 3.9-3.14.\
+  """
 readme = "README.md"
-requires-python = ">=3.9"
+keywords = [ "bm25", "full-text", "index", "search", "spell", "text" ]
 license = { text = "BSD-2-Clause" }
-keywords = ["index", "search", "text", "spell", "full-text", "bm25"]
-authors = [
-  { name = "Matt Chaput", email = "matt@whoosh.ca" },
-]
 maintainers = [
   { name = "Priya Sundaram" },
 ]
+authors = [
+  { name = "Matt Chaput", email = "matt@whoosh.ca" },
+]
+requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Developers",
   "License :: OSI Approved :: BSD License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
-  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
@@ -33,68 +35,31 @@ classifiers = [
   "Topic :: Text Processing :: Indexing",
   "Typing :: Typed",
 ]
-
-[project.optional-dependencies]
-dev = ["pytest>=7", "pytest-cov", "ruff", "pre-commit", "mypy"]
-mcp = ["mcp>=1.0"]
-langchain = ["langchain-core>=0.3"]
-llamaindex = ["llama-index-core>=0.10"]
-
-[project.scripts]
-whoosh = "whoosh.cli:main"
-whoosh-mcp = "whoosh.mcp:main"
-
-[project.urls]
-Homepage = "https://github.com/priya-sundaram-dev/whoosh"
-Documentation = "https://priya-sundaram-dev.github.io/whoosh/"
-Repository = "https://github.com/priya-sundaram-dev/whoosh"
-Issues = "https://github.com/priya-sundaram-dev/whoosh/issues"
-Changelog = "https://github.com/priya-sundaram-dev/whoosh/blob/main/CHANGELOG.md"
+dynamic = [ "version" ]
+optional-dependencies.dev = [ "mypy", "pre-commit", "pytest>=7", "pytest-cov", "ruff" ]
+optional-dependencies.langchain = [ "langchain-core>=0.3" ]
+optional-dependencies.llamaindex = [ "llama-index-core>=0.10" ]
+optional-dependencies.mcp = [ "mcp>=1" ]
+urls.Changelog = "https://github.com/priya-sundaram-dev/whoosh/blob/main/CHANGELOG.md"
+urls.Documentation = "https://priya-sundaram-dev.github.io/whoosh/"
+urls.Homepage = "https://github.com/priya-sundaram-dev/whoosh"
+urls.Issues = "https://github.com/priya-sundaram-dev/whoosh/issues"
+urls.Repository = "https://github.com/priya-sundaram-dev/whoosh"
+scripts.whoosh = "whoosh.cli:main"
+scripts.whoosh-mcp = "whoosh.mcp:main"
 
 [tool.setuptools]
+packages.find.where = [ "src" ]
 package-dir = { "" = "src" }
-
-[tool.setuptools.package-data]
-whoosh = ["py.typed"]
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.setuptools.dynamic]
-version = { attr = "whoosh.__version_str__" }
-
-# ==========================================================================
-# mypy: type-checker smoke config (gh#3).
-#
-# We do NOT type-check Whoosh's (still largely untyped) internals yet — that
-# is tracked incrementally on gh#3. Instead CI type-checks tests/typing_smoke.py,
-# a realistic downstream-usage snippet, to guard that the annotations on the
-# public API stay present and correct for users' editors and mypy runs.
-# ``follow_imports = "silent"`` means mypy still *reads* Whoosh's annotations
-# (so the smoke file is genuinely checked against them) but does not report
-# errors originating inside the not-yet-fully-typed internal modules.
-# ==========================================================================
-
-[tool.mypy]
-# Type-check the public-API smoke fixture against a modern floor. Whoosh3 runs
-# on 3.9+, but this only sets mypy's *checking target*; 3.10 keeps CI robust as
-# newer mypy releases drop support for 3.9 as a target (gh#3).
-python_version = "3.10"
-files = ["tests/typing_smoke.py"]
-follow_imports = "silent"
-ignore_missing_imports = true
-warn_unused_ignores = true
-warn_redundant_casts = true
+package-data.whoosh = [ "py.typed" ]
+dynamic.version = { attr = "whoosh.__version_str__" }
 
 # ==========================================================================
 # Existing ruff / tooling config preserved below.
 # ==========================================================================
-
 [tool.ruff]
 target-version = "py39"
-
-[tool.ruff.lint]
-select = [
+lint.select = [
   "AIR",    # Airflow
   "ASYNC",  # flake8-async
   "BLE",    # flake8-blind-except
@@ -157,45 +122,61 @@ select = [
   # "TD",   # flake8-todos
   # "TRY",  # tryceratops
 ]
-ignore = [
+lint.ignore = [
+  "BLE001",  # blind `except Exception` is used intentionally around optional features
+  # Whoosh's DATETIME field indexes and queries naive datetimes by design; users
+  # store tz-naive values and callers control any tz handling. Requiring an explicit
+  # tzinfo everywhere would be incorrect for this library's supported data model.
+  "DTZ",     # flake8-datetimez (naive datetimes are a supported feature)
   "EXE001",
   "F401",
   "F811",
   "F841",
   "FLY002",
   "PERF203",
-  "UP031",
   # Whoosh deliberately uses function-local (lazy) imports throughout to avoid
   # circular imports between tightly-coupled modules and to defer loading of
   # optional/heavy dependencies until they are actually needed. These are an
   # intentional design choice, not a defect, so we do not enforce top-level imports.
-  "PLC0415",  # `import` should be at the top-level of a file
-  # `re` and typing-only stdlib imports are used at runtime in several modules;
-  # moving them into TYPE_CHECKING blocks trades real correctness risk for a
-  # marginal import-time saving in a library that already curates its imports.
-  "TC003",    # move std-library import into a type-checking block
+  "PLC0415", # `import` should be at the top-level of a file
+  "PLR0915", # too-many-statements (only trips a large end-to-end typing test)
   # __enter__ returning the concrete class (IndexReader/IndexWriter) rather than
   # Self is intentional and correct here; forcing `Self` would need a version-
   # guarded import on the 3.9 floor for no practical benefit.
-  "PYI034",   # __enter__ should return `Self`
-  "PLR0915",  # too-many-statements (only trips a large end-to-end typing test)
-  # Whoosh's DATETIME field indexes and queries naive datetimes by design; users
-  # store tz-naive values and callers control any tz handling. Requiring an explicit
-  # tzinfo everywhere would be incorrect for this library's supported data model.
-  "DTZ",      # flake8-datetimez (naive datetimes are a supported feature)
-  "BLE001",   # blind `except Exception` is used intentionally around optional features
+  "PYI034",  # __enter__ should return `Self`
+  # `re` and typing-only stdlib imports are used at runtime in several modules;
+  # moving them into TYPE_CHECKING blocks trades real correctness risk for a
+  # marginal import-time saving in a library that already curates its imports.
+  "TC003",   # move std-library import into a type-checking block
+  "UP031",
 ]
+lint.per-file-ignores."src/whoosh/compat.py" = [ "F821" ]
+lint.per-file-ignores."src/whoosh/filedb/filestore.py" = [ "UP024" ]
+lint.per-file-ignores."src/whoosh/util/__init__.py" = [ "F821" ]
+lint.mccabe.max-complexity = 45  # Default is 10
+lint.pylint.max-args = 22  # Default is 5
+lint.pylint.max-branches = 79  # Default is 12
+lint.pylint.max-returns = 16  # Default is 6
+lint.pylint.max-statements = 256  # Default is 50
 
-[tool.ruff.lint.mccabe]
-max-complexity = 45  # Default is 10
-
-[tool.ruff.lint.per-file-ignores]
-"src/whoosh/compat.py" = ["F821"]
-"src/whoosh/filedb/filestore.py" = ["UP024"]
-"src/whoosh/util/__init__.py" = ["F821"]
-
-[tool.ruff.lint.pylint]
-max-args = 22  # Default is 5
-max-branches = 79  # Default is 12
-max-returns = 16  # Default is 6
-max-statements = 256  # Default is 50
+# ==========================================================================
+# mypy: type-checker smoke config (gh#3).
+#
+# We do NOT type-check Whoosh's (still largely untyped) internals yet — that
+# is tracked incrementally on gh#3. Instead CI type-checks tests/typing_smoke.py,
+# a realistic downstream-usage snippet, to guard that the annotations on the
+# public API stay present and correct for users' editors and mypy runs.
+# ``follow_imports = "silent"`` means mypy still *reads* Whoosh's annotations
+# (so the smoke file is genuinely checked against them) but does not report
+# errors originating inside the not-yet-fully-typed internal modules.
+# ==========================================================================
+[tool.mypy]
+files = [ "tests/typing_smoke.py" ]
+ignore_missing_imports = true
+follow_imports = "silent"
+# Type-check the public-API smoke fixture against a modern floor. Whoosh3 runs
+# on 3.9+, but this only sets mypy's *checking target*; 3.10 keeps CI robust as
+# newer mypy releases drop support for 3.9 as a target (gh#3).
+python_version = "3.10"
+warn_redundant_casts = true
+warn_unused_ignores = true
