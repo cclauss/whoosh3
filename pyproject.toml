@@ -128,7 +128,6 @@ lint.ignore = [
   # store tz-naive values and callers control any tz handling. Requiring an explicit
   # tzinfo everywhere would be incorrect for this library's supported data model.
   "DTZ",     # flake8-datetimez (naive datetimes are a supported feature)
-  "EXE001",
   "F401",
   "F811",
   "F841",
