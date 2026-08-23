@@ -6,6 +6,17 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Changed
+- **`whoosh3[mcp]` now targets the MCP Python SDK 2.x.** The SDK renamed
+  `FastMCP` to `MCPServer` (`mcp.server.MCPServer`) in its 2.0 release
+  (modelcontextprotocol/python-sdk#1732); `whoosh.mcp` was updated to import and
+  construct `MCPServer`, and the `mcp` optional dependency is now `mcp>=2`. The
+  tool surface (`@server.tool()`, `list_tools()`, `run()`) is unchanged, so the
+  `whoosh-mcp` console script and the "Whoosh as an MCP server" docs work as
+  before — but environments pinned to MCP SDK 1.x must upgrade. Thanks to
+  @mayuriphad for finding and wiring up the 2.x API (their first contribution!)
+  and @cclauss for the packaging-format catch. Closes #111 (#112).
+
 ### Internal / tooling
 - Made the linter gate meaningful. The `ruff check` CI step previously ran with
   `|| true`, so 457 latent findings never failed the build (thanks to @cclauss
