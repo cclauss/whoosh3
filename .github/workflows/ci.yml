@@ -123,5 +123,5 @@ jobs:
       - name: mypy type-check the public-API smoke fixture
         # Type-checks tests/typing_smoke.py (a realistic downstream-usage
         # snippet) against Whoosh's shipped annotations. Guards that the
-        # public API stays typed for users' editors and mypy runs (gh#3).
+        # public API stays typed for users' editors and mypy runs (gh#121).
         run: python -m mypy

@@ -158,10 +158,10 @@ lint.pylint.max-returns = 16  # Default is 6
 lint.pylint.max-statements = 256  # Default is 50
 
 # ==========================================================================
-# mypy: type-checker smoke config (gh#3).
+# mypy: type-checker smoke config (gh#121).
 #
 # We do NOT type-check Whoosh's (still largely untyped) internals yet — that
-# is tracked incrementally on gh#3. Instead CI type-checks tests/typing_smoke.py,
+# is tracked incrementally on gh#121. Instead CI type-checks tests/typing_smoke.py,
 # a realistic downstream-usage snippet, to guard that the annotations on the
 # public API stay present and correct for users' editors and mypy runs.
 # ``follow_imports = "silent"`` means mypy still *reads* Whoosh's annotations

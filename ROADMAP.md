@@ -165,7 +165,7 @@ About section of the README.)*
 
 ## Done (3.43.0 — released 2026-08-22)
 
-- [x] **Concrete-reader and collector typing scope complete (gh#3).** The
+- [x] **Concrete-reader and collector typing scope complete (gh#121).** The
       public reader and collector API is now fully annotated end-to-end. This
       release typed the two concrete multi-/empty-index readers in
       `whoosh.reading` — `MultiReader` (returned by `ix.reader()` when an index
@@ -241,7 +241,7 @@ About section of the README.)*
       `OnDiskBitSet.__repr__` `AttributeError`), each now covered by a
       regression test.
 - [x] `py.typed` marker + `Typing :: Typed` classifier shipped in **3.1.0**;
-      the most-used public API is now annotated end-to-end (gh#3): `index`
+      the most-used public API is now annotated end-to-end (gh#121): `index`
       entry points (`create_in`, `open_dir`, `exists_in`, `exists`), the
       `fields.Schema` methods and field-type constructors, `qparser.QueryParser`,
       and the `searching` layer (`Searcher`, `search`, `search_page`). A CI

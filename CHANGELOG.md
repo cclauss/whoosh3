@@ -290,7 +290,7 @@ collectors is unchanged.
   `token.chars` type-check cleanly. The module is clean under both `mypy` and
   `ruff`, and the four filters are exercised in `tests/typing_smoke.py` so the
   public typing stays CI-guarded (closes gh#82; completes the
-  `whoosh.analysis` typing sweep tracked in gh#3).
+  `whoosh.analysis` typing sweep tracked in gh#121).
 
 ## [3.38.0] - 2026-08-09
 
@@ -303,7 +303,7 @@ collectors is unchanged.
   algebra. A new `IntSetLike` alias documents the "another set of ints"
   parameter accepted by the combining/comparison methods. The module is
   clean under both `mypy` and `ruff` (closes gh#86; part of the incremental
-  typing effort tracked in gh#3).
+  typing effort tracked in gh#121).
 
 ### Fixed
 
@@ -1627,7 +1627,7 @@ search` now prints a short summary line to **stderr** — `N matches.` when
 
 ### Added
 
-- **CI type-checking smoke job (gh#3).** A new `types` job in CI runs `mypy`
+- **CI type-checking smoke job (gh#121).** A new `types` job in CI runs `mypy`
   against `tests/typing_smoke.py` — a realistic downstream-usage snippet
   (create an index, build a `Schema` from the field constructors, add a
   document, parse a query, run `searcher.search(...)`, iterate results). This
@@ -1636,14 +1636,14 @@ search` now prints a short summary line to **stderr** — `N matches.` when
   regresses them. Configured under `[tool.mypy]` in `pyproject.toml` with
   `follow_imports = "silent"` so the still-untyped internals don't produce
   noise while the public-facing surface is genuinely checked.
-- **Typed searching layer (gh#3).** The search-and-results API you use on every
+- **Typed searching layer (gh#121).** The search-and-results API you use on every
   query now carries type hints: `Searcher` (`__init__`, `search`, `search_page`,
   `search_with_collector`) and the result containers `Results`, `Hit`, and
   `ResultsPage`. Editors autocomplete `search(q, limit=..., ...)` and type
   checkers verify that `search()` returns a `Results` and `search_page()` a
   `ResultsPage`. Hints use `from __future__ import annotations` (no runtime cost
   or behavior change) and are guarded by a regression test.
-- **Typed query parser (gh#3).** `whoosh.qparser.QueryParser` — the class you
+- **Typed query parser (gh#121).** `whoosh.qparser.QueryParser` — the class you
   use to turn user input into queries — now carries type hints on its
   constructor and core methods (`parse`, `parse_`, `process`, `tag`), plus the
   premade factory functions `MultifieldParser`, `SimpleParser`, and
@@ -1651,14 +1651,14 @@ search` now prints a short summary line to **stderr** — `N matches.` when
   and type checkers verify that `parse()` returns a `whoosh.query.Query`. Hints
   use `from __future__ import annotations` (no runtime cost or behavior change)
   and are guarded by a regression test.
-- **Typed field constructors (gh#3).** The field types you write in every
+- **Typed field constructors (gh#121).** The field types you write in every
   `Schema` — `TEXT`, `ID`, `IDLIST`, `KEYWORD`, `NUMERIC`, `DATETIME`,
   `BOOLEAN`, `STORED`, and `COLUMN` — now carry parameter and return
   annotations on their constructors. Editors autocomplete kwargs like
   `stored=`, `unique=`, `phrase=`, `commas=`, and type checkers verify your
   field definitions. Hints use `from __future__ import annotations` (no runtime
   cost or behavior change) and are guarded by a regression test.
-- **More public typing (gh#3).** `whoosh.fields.Schema` — the class every user
+- **More public typing (gh#121).** `whoosh.fields.Schema` — the class every user
   imports first — now carries type hints on its common methods (`copy`,
   `items`, `names`, `add`, `remove`, `indexable_fields`, `stored_names`,
   `scorable_names`, `has_scorable_fields`, and the mapping dunders). This means
@@ -1677,7 +1677,7 @@ search` now prints a short summary line to **stderr** — `N matches.` when
 
 ### Added
 
-- **PEP 561 typing support (gh#3).** Whoosh now ships a `py.typed` marker and
+- **PEP 561 typing support (gh#121).** Whoosh now ships a `py.typed` marker and
   is advertised as a typed package (`Typing :: Typed` classifier), so type
   checkers (`mypy`, `pyright`) and editors pick up its types automatically —
   no more `# type: ignore` or missing-stub warnings when you import Whoosh.

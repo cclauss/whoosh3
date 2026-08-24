@@ -5,7 +5,7 @@ These tests ensure Whoosh advertises itself as a typed package (ships a
 API entry points stay present and importable, so downstream users get
 editor autocompletion and ``mypy``/``pyright`` checking out of the box.
 
-See gh#3.
+See gh#121.
 """
 
 import inspect
@@ -45,7 +45,7 @@ def test_versionstring_is_annotated():
 
 def test_schema_public_methods_are_annotated():
     """``Schema`` is the most-imported public class; its common methods
-    carry annotations so downstream code type-checks (gh#3)."""
+    carry annotations so downstream code type-checks (gh#121)."""
     for name in (
         "copy",
         "items",
@@ -68,7 +68,7 @@ def test_field_type_constructors_are_annotated():
     """The field-type constructors users write in every ``Schema`` (TEXT,
     ID, KEYWORD, NUMERIC, DATETIME, BOOLEAN, STORED, IDLIST, COLUMN) carry
     parameter and return annotations, so editors autocomplete their kwargs
-    and type checkers verify field definitions (gh#3)."""
+    and type checkers verify field definitions (gh#121)."""
     for name in (
         "TEXT",
         "ID",
@@ -92,7 +92,7 @@ def test_field_type_constructors_are_annotated():
 
 def test_qparser_entry_points_are_annotated():
     """QueryParser and the premade parser factories carry type hints so
-    editors and type checkers can assist when building queries (gh#3)."""
+    editors and type checkers can assist when building queries (gh#121)."""
     from whoosh.qparser import default as qpdefault
 
     # QueryParser core methods.
@@ -118,7 +118,7 @@ def test_qparser_entry_points_are_annotated():
 def test_searching_layer_entry_points_are_annotated():
     """The searching layer's public API (Searcher, Results, Hit, ResultsPage)
     carries type hints so editors and type checkers can assist when running
-    queries and reading results (gh#3)."""
+    queries and reading results (gh#121)."""
     from whoosh import searching
 
     # Searcher public query methods.

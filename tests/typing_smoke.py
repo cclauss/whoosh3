@@ -1,4 +1,4 @@
-"""Type-checker smoke fixture for Whoosh3's public API (gh#3).
+"""Type-checker smoke fixture for Whoosh3's public API (gh#121).
 
 This module is *not* run as a normal test. Instead, CI type-checks it with
 ``mypy`` (see the ``types`` job in ``.github/workflows/ci.yml``). It exercises
