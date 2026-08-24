@@ -19,6 +19,11 @@ All notable changes to this project are documented here. This project follows
 - Added the [auto-walrus](https://github.com/MarcoGorelli/auto-walrus)
   pre-commit hook and applied its safe assignment-expression rewrites across
   the codebase; bumped `pyproject-fmt` to v2.28.1 (#136). Thanks @cclauss.
+- Enabled additional ruff rule sets (flake8-pie, flake8-raise, pygrep-hooks,
+  pandas-vet, flake8-debugger) and applied their idiomatic fixes
+  (`range(0, n)`→`range(n)`, chained `.endswith`/`.startswith`→tuple form,
+  `not x is y`→`x is not y`, redundant `.keys()` removal, etc.) (#137). Thanks
+  @cclauss.
 
 ## [3.46.0] - 2026-08-24
 
