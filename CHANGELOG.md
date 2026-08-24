@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- Type hints across the `whoosh.index.Index` abstract base class and the
+  module-level functions `version_in`, `version`, and `clean_files`. The
+  `Index` ABC now advertises a fully-annotated contract (return types on
+  `refresh`, `reader`, `searcher`, `doc_count`, etc.), while the `create_in`
+  and `open_dir` factory functions keep their concrete `FileIndex` return type
+  so callers still see `.schema`/`.storage`. Closes #117. Thanks
+  @SantiagoDaleffe for their first contribution!
+
+### Internal / tooling
+- Added the [auto-walrus](https://github.com/MarcoGorelli/auto-walrus)
+  pre-commit hook and applied its safe assignment-expression rewrites across
+  the codebase; bumped `pyproject-fmt` to v2.28.1 (#136). Thanks @cclauss.
+
 ## [3.46.0] - 2026-08-24
 
 ### Added
