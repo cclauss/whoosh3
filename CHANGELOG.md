@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.46.0] - 2026-08-24
+
 ### Added
 - `whoosh.mcp` now works across **every current MCP SDK** — the official MCP
   Python SDK 2.x (`mcp.server.MCPServer`) *and* 1.x
@@ -18,6 +20,12 @@ All notable changes to this project are documented here. This project follows
   `fastmcp` extra installs the standalone package: `pip install
   "whoosh3[fastmcp]"`. The "no SDK installed" error now points at both options.
   Builds on @mayuriphad's 2.x rename fix (#112) by keeping 1.x installs working.
+
+### Internal / tooling
+- Added a `ci:` block to `.pre-commit-config.yaml` in preparation for enabling
+  the [pre-commit.ci](https://pre-commit.ci) App: `autofix_prs: false`, weekly
+  hook `autoupdate`, and `skip: [zizmor]` (zizmor keeps running in CI). No
+  behaviour change for contributors yet. Refs #133.
 
 ## [3.45.0] - 2026-08-24
 
