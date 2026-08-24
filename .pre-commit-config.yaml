@@ -1,3 +1,18 @@
+# pre-commit.ci configuration.
+# Runs the hooks below on every PR and keeps them up to date, replacing the
+# in-CI `pre-commit` job once the pre-commit.ci GitHub App is enabled on the repo.
+ci:
+  autofix_commit_msg: "style: auto-fixes from pre-commit hooks"
+  # Prefer proposing over pushing: review pre-commit.ci's fixes like any PR.
+  autofix_prs: false
+  autoupdate_branch: ""
+  autoupdate_commit_msg: "chore(pre-commit): autoupdate hook versions"
+  autoupdate_schedule: weekly
+  # zizmor audits GitHub Actions; run it in CI where it has repo/network context
+  # rather than in pre-commit.ci's sandbox.
+  skip: [zizmor]
+  submodules: false
+
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0
