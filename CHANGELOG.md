@@ -24,6 +24,11 @@ All notable changes to this project are documented here. This project follows
   (`range(0, n)`→`range(n)`, chained `.endswith`/`.startswith`→tuple form,
   `not x is y`→`x is not y`, redundant `.keys()` removal, etc.) (#137). Thanks
   @cclauss.
+- Enabled ruff's pycodestyle error (`E`) rules and cleaned up the flagged
+  code: `type(x) == T`→`type(x) is T` (E721), `== True`/`== False`→truthiness
+  in tests (E712), lambda assignments→`def` (E731), and `# noqa` for the
+  intentional bare-`except`/ambiguous-name cases. Behavior-preserving (#138).
+  Thanks @cclauss.
 
 ## [3.46.0] - 2026-08-24
 
