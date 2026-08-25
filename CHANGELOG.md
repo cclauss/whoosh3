@@ -6,6 +6,13 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+- `GroupNode.apply` (and therefore `GroupNode.accept`) no longer raises
+  `AttributeError`: a stale positional `self.type` argument referenced a
+  non-existent attribute and mis-bound the `nodes`/`boost` parameters. Query
+  syntax-tree transforms over group nodes now round-trip correctly, preserving
+  `boost` and subnodes (#140). Thanks @SantiagoDaleffe.
+
 ### Added
 - Type hints across the `whoosh.index.Index` abstract base class and the
   module-level functions `version_in`, `version`, and `clean_files`. The
@@ -29,6 +36,9 @@ All notable changes to this project are documented here. This project follows
   in tests (E712), lambda assignments→`def` (E731), and `# noqa` for the
   intentional bare-`except`/ambiguous-name cases. Behavior-preserving (#138).
   Thanks @cclauss.
+- Un-ignored the `empty-body` and `parameter-already-assigned` `ty` rules
+  after removing a dead `parse_` stub and fixing the `GroupNode.apply` bug
+  above (#140). Thanks @SantiagoDaleffe.
 
 ## [3.46.0] - 2026-08-24
 
