@@ -212,6 +212,36 @@ About section of the README.)*
 
 ## Now (next patch/minor)
 
+- [ ] **Free-threading (no-GIL) readiness.** The free-threaded CPython builds
+      (`3.13t`/`3.14t`, PEP 703) are where a *pure-Python* search library has the
+      most to gain: with the GIL gone, parallel indexing and concurrent search
+      across threads can actually scale on real cores, without dropping into C to
+      release the GIL. Getting there safely is incremental:
+    - [x] **Race-detection CI (shipped, `[Unreleased]`, #146).** CI now runs the
+          pure-Python core under [`pytest-run-parallel`] on the free-threaded
+          `3.14t` build (gating) and `3.15t` (early-warning, non-blocking),
+          executing every test across many worker threads to surface data races
+          the GIL used to hide. Tests that mutate module/class globals or on-disk
+          files directly are marked `@pytest.mark.thread_unsafe` and run serially;
+          fixture-based thread-unsafety is auto-detected. This is the regression
+          net every later step is built on.
+    - [x] **First real free-threading bug fixed (shipped, `[Unreleased]`, #146).**
+          `TimeLimitCollector` no longer crashes off the main thread — the
+          `SIGALRM` handler is only armed on the main thread and falls back to a
+          `threading.Timer` elsewhere. Found by the race-detection job above.
+    - [ ] **Audit and document the concurrency contract per component.** Which
+          objects are safe to share across threads (schemas, read-only searchers)
+          vs. which need one-per-thread (writers, the on-disk lock), captured in
+          the [concurrency guide](https://priya-sundaram-dev.github.io/whoosh/docs/threads.html)
+          with free-threaded builds explicitly in scope. Correctness first: any
+          shared mutable state the parallel job flags gets fixed or documented,
+          never papered over with a lock that reintroduces a bottleneck.
+    - [ ] **A worked parallel-indexing example** once the contract is nailed
+          down, so users on free-threaded builds have a blessed pattern rather
+          than guessing. Ships only with the benchmark harness showing a real
+          multi-core gain on a `3.14t` build.
+
+  [`pytest-run-parallel`]: https://github.com/Quansight-Labs/pytest-run-parallel
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the
       latest stable CPython (3.14.0, released 2025-10-07), added it to the CI
       matrix, and shipped the `Programming Language :: Python :: 3.14`
