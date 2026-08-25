@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.47.0] - 2026-08-25
+
 ### Fixed
 - `GroupNode.apply` (and therefore `GroupNode.accept`) no longer raises
   `AttributeError`: a stale positional `self.type` argument referenced a
