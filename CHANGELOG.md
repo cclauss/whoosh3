@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.48.0] - 2026-08-26
+
 ### Fixed
 - `TimeLimitCollector` no longer crashes with `ValueError: signal only works
   in the main thread of the main interpreter` when a search is run from a
