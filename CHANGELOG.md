@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+- `whoosh.support.bitstream.BitStreamReader.read` raised a tuple
+  (`raise (IndexError, ...)`) instead of an exception on an out-of-range
+  read, so callers got an unrelated `TypeError` rather than the intended
+  `IndexError`. It now raises `IndexError` correctly. Surfaced by un-ignoring
+  the `ty` `not-iterable`/`invalid-raise` rules (#152).
+
+### Changed
+- Type-checking hygiene: the `ty` rules `invalid-raise` and `not-iterable`
+  are now enforced instead of ignored. This tightened a few re-raise sites in
+  `filestore.py`/`index.py` (`except OSError as e: ... raise` instead of
+  `sys.exc_info()`) and clarified test-double `children` attributes. Thanks
+  @SantiagoDaleffe (#152).
+
 ## [3.48.0] - 2026-08-26
 
 ### Fixed
