@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.48.1] - 2026-08-26
+
 ### Fixed
 - Whoosh 2.7.4 → whoosh3 migration regressions in span queries and hits,
   reported by @BenitoKme (#153):
