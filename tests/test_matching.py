@@ -581,6 +581,8 @@ def test_every_matcher():
             return MyMatcher(children, searcher.doc_count_all(), searcher.is_deleted)
 
     class MyMatcher(matching.UnionMatcher):
+        children: list
+
         def __init__(self, children, doccount, is_deleted):
             self.children = children
             self._id = 0

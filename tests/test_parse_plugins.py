@@ -532,6 +532,8 @@ def test_fuzzy_prefix():
 
 def test_function_plugin():
     class FakeQuery(query.Query):
+        children: list
+
         def __init__(self, children, *args, **kwargs):
             self.children = children
             self.args = args
