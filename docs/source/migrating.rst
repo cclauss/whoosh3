@@ -112,6 +112,12 @@ resolves them with no code change:
   an on-disk ``FileStorage`` in the system temp directory, so a supposedly
   in-memory index could still hit ``[Errno 2] No such file or directory`` and
   needed a writable ``/tmp``. It now stays fully in memory.
+* **Span queries fixed (3.48.1).** Reported by a user migrating a real project
+  from Whoosh 2.7.4: searching a ``SpanNot`` (and related span queries) could
+  raise ``IndexError`` when the excluded sub-matcher was exhausted;
+  ``str()``/``print()`` on a span query raised ``NotImplementedError``; and
+  ``Hit.get(key, default)`` was missing. All three are fixed with no code
+  change on your side. If you use span queries, upgrade to ``whoosh3>=3.48.1``.
 
 See the :doc:`changelog <releases/index>` for the complete list.
 
