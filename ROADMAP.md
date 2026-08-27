@@ -240,10 +240,19 @@ About section of the README.)*
           the lock-contention helper). Correctness first: any shared mutable
           state the parallel job flags gets fixed or documented, never papered
           over with a lock that reintroduces a bottleneck.
-    - [ ] **A worked parallel-indexing example** once the contract is nailed
-          down, so users on free-threaded builds have a blessed pattern rather
-          than guessing. Ships only with the benchmark harness showing a real
-          multi-core gain on a `3.14t` build.
+    - [x] **A worked parallel-indexing example (shipped, `[Unreleased]`).**
+          `examples/parallel_indexing.py` is the blessed fan-out/fan-in
+          pattern: one sub-index per worker thread (single-writer contract kept
+          — no shared writer, no lock contention), then merge with
+          `writer.add_reader()` into one ordinary index. It ships with a
+          serial-vs-parallel timing harness that reports the build's GIL status
+          (`sys._is_gil_enabled`) and a correctness check that the merged index
+          equals a serial build; `tests/test_example_parallel_indexing.py`
+          pins the doc-count/query equivalence across even and uneven shards.
+          On a GIL build the parallel path matches the serial baseline (merge
+          overhead, expected and stated); on a free-threaded `3.13t`/`3.14t`
+          build the pure-Python indexing scales across cores. Documented in the
+          [concurrency guide](https://priya-sundaram-dev.github.io/whoosh/docs/threads.html).
 
   [`pytest-run-parallel`]: https://github.com/Quansight-Labs/pytest-run-parallel
 - [x] **Python 3.14 support (3.11.0).** Verified the full suite passes on the

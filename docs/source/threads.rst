@@ -160,6 +160,44 @@ The close-then-delete contract is guarded by a regression test
 release.
 
 
+Parallel indexing (free-threaded builds)
+========================================
+
+Indexing is CPU-bound *pure-Python* work — tokenizing, stemming, filtering,
+and building postings. On a normal (GIL-enabled) build, spreading that work
+across threads does not speed it up: only one thread runs Python at a time. On
+a **free-threaded** build (``3.13t``/``3.14t``, PEP 703) the GIL is gone, so
+that same work can finally scale across real cores without dropping into C.
+
+Because a plain :class:`~whoosh.writing.IndexWriter` is single-writer (see the
+quick-reference table above), the blessed pattern is **not** to share one
+writer across threads. Instead, fan out into one sub-index per worker thread,
+then fan in by merging the finished sub-indexes with
+:meth:`whoosh.writing.IndexWriter.add_reader`:
+
+1. Build the :class:`~whoosh.fields.Schema` once (it is immutable and safe to
+   share).
+2. Split the corpus into *N* shards; each worker thread creates **its own**
+   index in **its own** directory and writes its shard — one writer per thread,
+   so the write lock is never contended.
+3. On the main thread, open a read-only reader on each finished sub-index and
+   ``writer.add_reader(reader)`` them into one final index, then
+   ``commit(optimize=True)``.
+
+The merged result is an ordinary Whoosh index, identical to what a single
+serial writer would have produced. This is the same ``add_reader`` primitive
+Whoosh's own multiprocessing writer uses. A complete, runnable implementation
+with a serial-vs-parallel timing harness and a correctness check ships as
+``examples/parallel_indexing.py``::
+
+    python examples/parallel_indexing.py --docs 40000 --workers 4
+
+On a GIL build the parallel path is about the same as (or slightly slower than)
+the serial baseline — the merge adds a little work the serial path avoids, and
+that is expected. Run it on a free-threaded build to see the parallel path pull
+ahead as workers increase.
+
+
 Versioning
 ==========
 

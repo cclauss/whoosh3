@@ -6,6 +6,20 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Added
+- **Parallel-indexing example for free-threaded builds** (`examples/parallel_indexing.py`).
+  The blessed fan-out/fan-in pattern the concurrency guide points no-GIL users
+  at: split the corpus across worker threads, have each thread build its own
+  sub-index (keeping the single-writer contract — no shared writer, no lock
+  contention), then merge the finished sub-indexes into one ordinary index with
+  `IndexWriter.add_reader()`. Ships with a serial-vs-parallel timing harness
+  that reports the runtime's GIL status and a correctness check that the merged
+  index equals a serial build. On a GIL build the parallel path matches the
+  serial baseline (merge overhead, expected); on a free-threaded `3.13t`/`3.14t`
+  build the pure-Python indexing scales across cores. Covered by
+  `tests/test_example_parallel_indexing.py`. Documented in the concurrency
+  guide (`threads.rst`).
+
 ### Documentation
 - Concurrency guide (`threads.rst`) now opens with a per-object quick-reference
   table spelling out what is safe to share across threads: `Index`/`FileIndex`
