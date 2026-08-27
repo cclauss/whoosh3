@@ -20,6 +20,16 @@ All notable changes to this project are documented here. This project follows
   `tests/test_example_parallel_indexing.py`. Documented in the concurrency
   guide (`threads.rst`).
 
+### Internal
+- Tightened `ty` static-typing enforcement by clearing and un-ignoring two more
+  rules across the query/analysis layers: `no-matching-overload` (#155) and
+  `invalid-return-type` (#156, 28 violations). As part of the latter, the
+  `__eq__` methods that used the `other and self.__class__ is other.__class__`
+  form were switched to `type(self) is type(other)`, which also fixes a latent
+  correctness bug: objects that are falsy when empty (`CompositeAnalyzer`,
+  `CompoundQuery`) previously mis-compared — e.g. `And([]) == And([])` no longer
+  short-circuits to a non-`True` result. Thanks to @SantiagoDaleffe for both.
+
 ### Documentation
 - Concurrency guide (`threads.rst`) now opens with a per-object quick-reference
   table spelling out what is safe to share across threads: `Index`/`FileIndex`
