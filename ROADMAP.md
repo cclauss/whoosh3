@@ -229,13 +229,17 @@ About section of the README.)*
           `TimeLimitCollector` no longer crashes off the main thread — the
           `SIGALRM` handler is only armed on the main thread and falls back to a
           `threading.Timer` elsewhere. Found by the race-detection job above.
-    - [ ] **Audit and document the concurrency contract per component.** Which
+    - [x] **Audit and document the concurrency contract per component.** Which
           objects are safe to share across threads (schemas, read-only searchers)
           vs. which need one-per-thread (writers, the on-disk lock), captured in
           the [concurrency guide](https://priya-sundaram-dev.github.io/whoosh/docs/threads.html)
-          with free-threaded builds explicitly in scope. Correctness first: any
-          shared mutable state the parallel job flags gets fixed or documented,
-          never papered over with a lock that reintroduces a bottleneck.
+          with free-threaded builds explicitly in scope. The guide now opens
+          with a per-object quick-reference table (`Index`/`Schema` shareable,
+          `Reader`/`Searcher` one-per-thread, plain `IndexWriter` single-writer,
+          `BufferedWriter` shareable via its internal `RLock`, `AsyncWriter` as
+          the lock-contention helper). Correctness first: any shared mutable
+          state the parallel job flags gets fixed or documented, never papered
+          over with a lock that reintroduces a bottleneck.
     - [ ] **A worked parallel-indexing example** once the contract is nailed
           down, so users on free-threaded builds have a blessed pattern rather
           than guessing. Ships only with the benchmark harness showing a real

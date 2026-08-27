@@ -5,6 +5,55 @@ Concurrency, locking, and versioning
 Concurrency
 ===========
 
+Quick reference: what is safe to share across threads
+-----------------------------------------------------
+
+Whoosh has no global mutable state, so the concurrency contract is
+per-object. The table below is the short version; the sections that follow
+explain the *why*. It applies equally on the GIL and free-threaded
+(no-GIL, PEP 703) CPython builds — on a free-threaded build these same
+read-only-shareable objects are what let indexing and search actually scale
+across cores.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 26 20 54
+
+   * - Object
+     - Share across threads?
+     - Contract
+   * - :class:`~whoosh.index.Index` / ``FileIndex``
+     - **Yes**
+     - Stateless handle to the index directory. Open once and share it; each
+       thread derives its own reader/searcher/writer from it.
+   * - :class:`~whoosh.fields.Schema`
+     - **Yes, once built**
+     - Read-only after you create the index. Finish calling
+       :meth:`~whoosh.fields.Schema.add` *before* you share it; don't mutate a
+       schema that other threads are reading.
+   * - :class:`~whoosh.reading.IndexReader` /
+       :class:`~whoosh.searching.Searcher`
+     - **One per thread**
+     - Wraps open files and relies on consistent file-cursor positions, so it
+       is *not* safe to call from two threads at once. Sharing a **read-only**
+       searcher across sequential requests is a big win (it caches field data);
+       just don't drive one searcher from multiple threads concurrently.
+   * - :class:`~whoosh.writing.IndexWriter` (plain ``ix.writer()``)
+     - **No — one at a time**
+     - Holds the exclusive write lock for the whole index. A second writer
+       (any thread or process) raises :class:`~whoosh.index.LockError`. Use it
+       from one thread and close it to release the lock.
+   * - :class:`~whoosh.writing.BufferedWriter`
+     - **Yes, by design**
+     - Built to be created once and shared: it serializes ``add``/``update``/
+       ``commit`` with an internal ``threading.RLock`` and buffers documents
+       for near-real-time search. Call :meth:`~whoosh.writing.BufferedWriter.close`
+       before it goes out of scope.
+   * - :class:`~whoosh.writing.AsyncWriter`
+     - n/a (helper)
+     - Not a shared object but a way to *cope* with the single-writer rule:
+       it retries the commit on a background thread if the index is locked.
+
 The ``FileIndex`` object is "stateless" and should be share-able between
 threads.
 

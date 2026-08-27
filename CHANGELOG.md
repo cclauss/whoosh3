@@ -6,6 +6,17 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Documentation
+- Concurrency guide (`threads.rst`) now opens with a per-object quick-reference
+  table spelling out what is safe to share across threads: `Index`/`FileIndex`
+  and a built `Schema` are shareable; `IndexReader`/`Searcher` are one-per-thread
+  (file-cursor state); a plain `IndexWriter` is single-writer (holds the write
+  lock); `BufferedWriter` is designed to be shared and serializes its state with
+  an internal `threading.RLock`; `AsyncWriter` is the helper for coping with the
+  single-writer rule. The contract is called out as applying equally to
+  free-threaded (no-GIL, PEP 703) builds. Completes the "document the
+  concurrency contract per component" roadmap item.
+
 ## [3.48.1] - 2026-08-26
 
 ### Fixed
