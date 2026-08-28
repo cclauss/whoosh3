@@ -6,6 +6,8 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+## [3.49.0] - 2026-08-28
+
 ### Added
 - **Parallel-indexing example for free-threaded builds** (`examples/parallel_indexing.py`).
   The blessed fan-out/fan-in pattern the concurrency guide points no-GIL users
