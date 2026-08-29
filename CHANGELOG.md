@@ -6,6 +6,23 @@ All notable changes to this project are documented here. This project follows
 
 ## [Unreleased]
 
+### Fixed
+- `adatetime.date()` raised `TypeError: function takes at most 3 arguments
+  (4 given)` on every call — it passed `tzinfo=timezone.utc` to
+  `datetime.date()`, which (unlike `datetime`) accepts no `tzinfo` (a `date`
+  is naive by definition). The stray keyword is removed; `adatetime.date()`
+  now returns the expected `datetime.date`. Caught by @SantiagoDaleffe while
+  clearing the `ty` `unknown-argument` rule (#158).
+
+### Internal
+- Cleared and un-ignored the `ty` `unknown-argument` rule (#158, 10 violations):
+  widened the abstract base signatures `IndexWriter.commit`/`cancel` and
+  `IndexReader.postings` with `**kwargs: Any` so they honour the arguments their
+  concrete subclasses accept (`optimize=`, `merge=`, `scorer=`, …), plus two
+  targeted `# ty: ignore[unknown-argument]` on mixin `self.__class__(...)`
+  re-instantiations where the concrete constructor can't be known statically.
+  Thanks to @SantiagoDaleffe.
+
 ## [3.49.0] - 2026-08-28
 
 ### Added
